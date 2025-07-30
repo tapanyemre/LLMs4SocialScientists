@@ -1,0 +1,23 @@
+::: {.comments-section}
+
+::: {.comments-divider}
+:::
+
+::: {.comments-container}
+### Join the Discussion {.comments-title}
+
+Have questions about this content? Want to share insights with other social science researchers? 
+Join the conversation in our GitHub Discussions.
+
+::: {.comments-actions}
+[View Discussions](https://github.com/tapanyemre/LLMs4SocialScientists/discussions){.btn .btn-primary .comments-btn target="_blank" rel="noopener"}
+
+[Start New Discussion](https://github.com/tapanyemre/LLMs4SocialScientists/discussions/new){.btn .btn-outline .comments-btn target="_blank" rel="noopener"}
+:::
+
+::: {.comments-note}
+**For Researchers:** This discussion space is designed for social science researchers 
+to share experiences, ask methodological questions, and discuss applications of LLMs in their work.
+:::
+:::
+::: 

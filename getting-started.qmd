@@ -2,6 +2,13 @@
 title: "Getting Started"
 ---
 
+<div class="report-issue-section">
+<div class="report-issue-container">
+<a href="https://github.com/tapanyemre/LLMs4SocialScientists/issues/new?template=content-issue.md&title=Content%20Issue:%20" class="report-issue-link" target="_blank" rel="noopener">Report Content Issue</a>
+<span class="report-issue-text">Found an error or have a suggestion? Help improve this resource for fellow researchers.</span>
+</div>
+</div>
+
 # Getting Started
 
 This section provides the foundation for your journey into Large Language Models. You'll learn about the course structure, set up your technical environment, develop effective learning strategies, and understand how LLMs can be applied to social science research.

@@ -7,6 +7,8 @@ book:
   subtitle: "A Progressive Journey from Fundamentals to Advanced Applications"
   author: "Yunus Emre Tapan"
   date: today
+  repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
+  repo-actions: [edit, issue, source]
   chapters:
     - index.qmd
     - part: getting-started.qmd
@@ -39,9 +41,6 @@ format:
     fig-cap-location: bottom
     css: styles.css
     logo: assets/images/bliss-logo.png
-    repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
-    
-    repo-actions: [edit, issue]
   pdf:
     documentclass: scrreprt
     papersize: a4
