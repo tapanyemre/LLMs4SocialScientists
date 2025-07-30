@@ -1,32 +1,23 @@
-name: Deploy Quarto Book to Main Branch
+name: Deploy Book
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+    
     - name: Setup Quarto
       uses: quarto-dev/setup-quarto@v1
+      
     - name: Render book
       run: quarto render
-    - name: Deploy to main branch
-      if: github.ref == 'refs/heads/main'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add _book/
-        git commit -m "Auto-deploy book from GitHub Actions" || exit 0
-        git push origin main 
+      
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./_book 
