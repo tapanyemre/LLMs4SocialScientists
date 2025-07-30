@@ -1,0 +1,241 @@
+/* BLISS Learning - Causal Inference in R inspired styling */
+
+/* Import fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Darker+Grotesque&family=Karla:ital,wght@0,400;0,700;1,400&family=Roboto+Mono&display=swap');
+
+/* Typography - matching Causal Inference in R */
+body {
+  font-family: "Karla", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: #2c3e50;
+  font-size: 16px;
+}
+
+/* Headers - using Darker Grotesque like Causal Inference in R */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Darker Grotesque", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.4rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+/* Links */
+a {
+  color: #3498db;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+a:hover {
+  border-bottom-color: #3498db;
+  text-decoration: none;
+}
+
+/* Code blocks - using Roboto Mono like Causal Inference in R */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  word-break: normal;
+  word-wrap: normal;
+}
+
+code {
+  font-family: "Roboto Mono", "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+  background-color: #f8f9fa;
+  color: #e83e8c;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  white-space: inherit;
+}
+
+pre code {
+  white-space: inherit;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+th, td {
+  border: 1px solid #dee2e6;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #3498db;
+  margin: 1.5rem 0;
+  padding: 0 1rem;
+  font-style: italic;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Learning objectives box */
+.learning-objectives {
+  background-color: #e8f4fd;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.learning-objectives h3 {
+  color: #2980b9;
+  margin-top: 0;
+  font-size: 1.3rem;
+}
+
+/* Exercise boxes */
+.exercise {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.exercise h4 {
+  color: #856404;
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+/* Navigation */
+.nav-pills .nav-link.active {
+  background-color: #3498db;
+  border-radius: 6px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Sidebar styling */
+.sidebar {
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+}
+
+/* Content area */
+.quarto-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Content area */
+.quarto-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Clean spacing */
+p {
+  margin-bottom: 1.2rem;
+}
+
+ul, ol {
+  margin-bottom: 1.2rem;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+/* Figure captions - matching Causal Inference in R */
+p.caption {
+  color: #777;
+  margin-top: 10px;
+}
+
+.inline-figure {
+  border: 0;
+  margin-bottom: 1rem;
+}
+
+/* Part headers styling */
+.part {
+  font-family: "Darker Grotesque", sans-serif;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3498db;
+}
+
+/* Chapter numbers */
+.chapter-number {
+  color: #3498db;
+  font-weight: 600;
+}
+
+/* Book title styling */
+.title {
+  font-family: "Darker Grotesque", sans-serif;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.subtitle {
+  font-family: "Karla", sans-serif;
+  color: #6c757d;
+  font-style: italic;
+}
