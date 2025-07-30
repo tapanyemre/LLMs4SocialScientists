@@ -39,7 +39,7 @@ format:
     fig-cap-location: bottom
     css: styles.css
     logo: assets/images/bliss-logo.png
-    repo-url: https://github.com/your-username/BLISS-Learning
+    repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
     repo-actions: [edit, issue]
   pdf:
     documentclass: scrreprt
