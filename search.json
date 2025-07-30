@@ -1,0 +1,1000 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "LLMs for Social Scientists",
+    "section": "",
+    "text": "Preface",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-this-book",
+    "href": "index.html#about-this-book",
+    "title": "LLMs for Social Scientists",
+    "section": "About This Book",
+    "text": "About This Book\nThis book represents the collective knowledge from the Boston LLMs Initiative for Social Scientists (BLISS) workshop series. Our mission is to make Large Language Models accessible and useful for social science researchers, while fostering critical discussions about their limitations and biases.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#why-this-book-exists",
+    "href": "index.html#why-this-book-exists",
+    "title": "LLMs for Social Scientists",
+    "section": "Why This Book Exists",
+    "text": "Why This Book Exists\nLarge Language Models are transforming how we conduct research, analyze text, and interact with data. However, many social science researchers find these tools intimidating or inaccessible. This book bridges that gap by providing:\n\nProgressive learning from fundamentals to advanced applications\nSocial science focus with research-relevant examples\nHands-on practice with real-world applications\nCritical perspective on limitations and ethical considerations",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#who-this-book-is-for",
+    "href": "index.html#who-this-book-is-for",
+    "title": "LLMs for Social Scientists",
+    "section": "Who This Book Is For",
+    "text": "Who This Book Is For\nThis book is designed for social science researchers who want to understand and apply LLMs to their research workflows. Whether you’re a graduate student, faculty member, or research professional, this book provides the foundation you need to confidently use LLMs in your work.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#how-this-book-is-organized",
+    "href": "index.html#how-this-book-is-organized",
+    "title": "LLMs for Social Scientists",
+    "section": "How This Book Is Organized",
+    "text": "How This Book Is Organized\nThe book follows a progressive structure:\nGetting Started: Foundation and preparation Fundamentals: Understanding how LLMs work LLMs in Action: Practical applications and APIs Contextualizing LLMs: Advanced techniques and complete applications\nEach chapter builds upon the previous one, ensuring you have a solid foundation before moving to more advanced topics.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#prerequisites",
+    "href": "index.html#prerequisites",
+    "title": "LLMs for Social Scientists",
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\nBasic familiarity with Python (we’ll provide refreshers)\nWillingness to work through mathematical concepts step-by-step\nInterest in applying AI to social science research",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-the-author",
+    "href": "index.html#about-the-author",
+    "title": "LLMs for Social Scientists",
+    "section": "About the Author",
+    "text": "About the Author\nYunus Emre Tapan is the founder of BLISS and a researcher focused on making AI tools accessible to social scientists.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#about-bliss",
+    "href": "index.html#about-bliss",
+    "title": "LLMs for Social Scientists",
+    "section": "About BLISS",
+    "text": "About BLISS\nThe Boston LLMs Initiative for Social Scientists (BLISS) organizes funded workshop series teaching social science researchers how to use large language models in their work, while discussing limitations and biases. Visit yemretapan.com/bliss for upcoming events and workshops.\n\nThis book is a living document that will be updated as the field evolves. We welcome feedback and contributions from the research community.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#navigation",
+    "href": "index.html#navigation",
+    "title": "LLMs for Social Scientists",
+    "section": "Navigation",
+    "text": "Navigation\nNext: Chapter 1: Getting Started →",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>LLMs for Social Scientists</span>"
+    ]
+  },
+  {
+    "objectID": "getting-started.html",
+    "href": "getting-started.html",
+    "title": "Getting Started",
+    "section": "",
+    "text": "Getting Started\nThis section provides the foundation for your journey into Large Language Models. You’ll learn about the course structure, set up your technical environment, develop effective learning strategies, and understand how LLMs can be applied to social science research.",
+    "crumbs": [
+      "Getting Started"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html",
+    "href": "00-getting-started/01-course-overview.html",
+    "title": "2  Course Overview",
+    "section": "",
+    "text": "2.1 Learning Philosophy\nThis course is designed specifically for social science researchers who want to understand and use Large Language Models (LLMs) in their work. We take a progressive approach that builds from fundamental concepts to practical applications.",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#learning-philosophy",
+    "href": "00-getting-started/01-course-overview.html#learning-philosophy",
+    "title": "2  Course Overview",
+    "section": "",
+    "text": "2.1.1 Why This Matters for Social Science Research\nLLMs are transforming how we can analyze text, conduct research, and interact with data. Understanding these tools allows you to:\n\nAnalyze large text datasets more efficiently\nGenerate research hypotheses from literature reviews\nCreate survey instruments and interview protocols\nProcess qualitative data at scale\nCommunicate findings more effectively",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#course-structure",
+    "href": "00-getting-started/01-course-overview.html#course-structure",
+    "title": "2  Course Overview",
+    "section": "2.2 Course Structure",
+    "text": "2.2 Course Structure\n\n2.2.1 Chapter 1: Fundamentals of LLMs\nBuilding the Foundation - Neural network basics and mathematical understanding - Transformer architecture and attention mechanisms - How modern LLMs process and generate text\n\n\n2.2.2 Chapter 2: LLMs in Action\nPractical Applications - Exploring LLM capabilities and limitations - Working with APIs and interfaces - Hands-on practice with real models\n\n\n2.2.3 Chapter 3: Contextualizing LLMs\nAdvanced Applications - Retrieval-Augmented Generation (RAG) techniques - Knowledge graphs and advanced context methods - Building complete applications with user interfaces",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#learning-approach",
+    "href": "00-getting-started/01-course-overview.html#learning-approach",
+    "title": "2  Course Overview",
+    "section": "2.3 Learning Approach",
+    "text": "2.3 Learning Approach\n\n2.3.1 Progressive Complexity\nEach chapter builds upon the previous one, ensuring you have a solid foundation before moving to more advanced topics.\n\n\n2.3.2 Hands-On Practice\nTheory is always paired with practical exercises, allowing you to immediately apply what you learn.\n\n\n2.3.3 Research-Focused Examples\nAll examples and exercises are designed with social science research applications in mind.",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#what-youll-need",
+    "href": "00-getting-started/01-course-overview.html#what-youll-need",
+    "title": "2  Course Overview",
+    "section": "2.4 What You’ll Need",
+    "text": "2.4 What You’ll Need\n\n2.4.1 Technical Prerequisites\n\nBasic familiarity with Python (we’ll provide refreshers)\nAccess to Google Colab (free, no installation required)\nWillingness to work through mathematical concepts step-by-step\n\n\n\n2.4.2 Mindset\n\nCuriosity about how AI tools work\nPatience with technical concepts\nInterest in applying new tools to research problems\nOpenness to discussing limitations and biases",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#getting-the-most-from-this-course",
+    "href": "00-getting-started/01-course-overview.html#getting-the-most-from-this-course",
+    "title": "2  Course Overview",
+    "section": "2.5 Getting the Most from This Course",
+    "text": "2.5 Getting the Most from This Course\n\n2.5.1 Before Each Chapter\n\nComplete the pre-reading materials\nSet up your technical environment\nReview any prerequisites\n\n\n\n2.5.2 During Each Chapter\n\nWork through exercises step-by-step\nDon’t rush through mathematical concepts\nAsk questions when something isn’t clear\nReflect on how concepts apply to your research\n\n\n\n2.5.3 After Each Chapter\n\nReflect on what you learned\nPractice with your own examples\nConnect to the next chapter’s content\nConsider attending BLISS workshops for hands-on practice",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#bliss-workshop-connection",
+    "href": "00-getting-started/01-course-overview.html#bliss-workshop-connection",
+    "title": "2  Course Overview",
+    "section": "2.6 BLISS Workshop Connection",
+    "text": "2.6 BLISS Workshop Connection\nThis book complements our in-person workshop series. While the book provides comprehensive self-paced learning, our workshops offer:\n\nHands-on guided practice with expert instructors\nReal-time feedback and troubleshooting\nCollaborative learning with other researchers\nAdvanced topics and specialized applications\nNetworking opportunities with the BLISS community\n\nVisit yemretapan.com/bliss for upcoming workshop dates and registration information.",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/01-course-overview.html#navigation",
+    "href": "00-getting-started/01-course-overview.html#navigation",
+    "title": "2  Course Overview",
+    "section": "2.7 Navigation",
+    "text": "2.7 Navigation\nNext: Technical Setup & Learning Strategies →",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Course Overview</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html",
+    "href": "00-getting-started/02-setup-and-strategies.html",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "",
+    "text": "3.1 Overview\nThis chapter combines practical setup instructions with effective learning strategies. You’ll learn how to get started with the technical tools and develop approaches that work for social science researchers.",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#technical-setup",
+    "href": "00-getting-started/02-setup-and-strategies.html#technical-setup",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.2 Technical Setup",
+    "text": "3.2 Technical Setup\n\n3.2.1 Google Colab Environment\n\nNo installation required - everything runs in your browser\nFree access to powerful computing resources\nCollaborative features for sharing and version control\n\n\n\n3.2.2 Getting Started\n\nAccess: Go to colab.research.google.com\nSign in with your Google account\nCreate notebook and start coding immediately\n\n\n\n3.2.3 Essential Python Concepts\n\nVariables: Storing data (text, numbers, lists)\nFunctions: Reusable code blocks\nLibraries: Pre-built tools for specific tasks\nData structures: Lists, dictionaries for organizing information",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#learning-strategies-for-social-scientists",
+    "href": "00-getting-started/02-setup-and-strategies.html#learning-strategies-for-social-scientists",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.3 Learning Strategies for Social Scientists",
+    "text": "3.3 Learning Strategies for Social Scientists\n\n3.3.1 Overcoming Math Anxiety\n\nFocus on concepts over memorization\nReal-world examples make abstract ideas concrete\nStep-by-step approach - no rushing through complex topics\nPractice with familiar data from your research area\n\n\n\n3.3.2 Effective Learning Techniques\n\nPreview material before diving in\nTake notes in your own words\nPractice immediately with exercises\nConnect to your research - think about applications\nUse multiple resources when needed\n\n\n\n3.3.3 Building Confidence\n\nStart small and build gradually\nRegular practice (15-30 minutes daily)\nMultiple learning styles - visual, auditory, hands-on\nSafe environment - you can’t break anything permanently",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#common-challenges-and-solutions",
+    "href": "00-getting-started/02-setup-and-strategies.html#common-challenges-and-solutions",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.4 Common Challenges and Solutions",
+    "text": "3.4 Common Challenges and Solutions\n\n3.4.1 “I’m not good at math”\nSolution: Focus on understanding concepts through examples. Many mathematical ideas are intuitive when explained properly.\n\n\n3.4.2 “I don’t have a computer science background”\nSolution: We explain technical concepts in social science terms. Many tools are designed to be user-friendly.\n\n\n3.4.3 “I don’t have time”\nSolution: Focus on concepts most relevant to your research. You don’t need to understand everything to use LLMs effectively.",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#getting-help-when-stuck",
+    "href": "00-getting-started/02-setup-and-strategies.html#getting-help-when-stuck",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.5 Getting Help When Stuck",
+    "text": "3.5 Getting Help When Stuck\n\n3.5.1 Self-Help Strategies\n\nRe-read explanations with fresh eyes\nLook for concrete examples\nBreak problems into smaller parts\nTry different approaches\n\n\n\n3.5.2 Asking for Help\n\nBe specific about what’s confusing\nShow your work and thought process\nRequest examples related to your research",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#connecting-to-your-research",
+    "href": "00-getting-started/02-setup-and-strategies.html#connecting-to-your-research",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.6 Connecting to Your Research",
+    "text": "3.6 Connecting to Your Research\n\n3.6.1 Throughout the Course\n\nThink about applications to your specific research\nUse your own examples and data\nConsider limitations and ethical implications\nFocus on practical skills over theoretical perfection\n\n\n\n3.6.2 Research Applications to Explore\n\nText analysis: Interview transcripts, survey responses\nLiterature reviews: Summarizing and synthesizing papers\nSurvey design: Generating and analyzing questions\nData preprocessing: Cleaning and preparing text data\nCommunication: Writing summaries and reports",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "00-getting-started/02-setup-and-strategies.html#navigation",
+    "href": "00-getting-started/02-setup-and-strategies.html#navigation",
+    "title": "3  Technical Setup & Learning Strategies",
+    "section": "3.7 Navigation",
+    "text": "3.7 Navigation\nPrevious: Course Overview ←\nNext: Neural Networks Fundamentals →",
+    "crumbs": [
+      "Getting Started",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Technical Setup & Learning Strategies</span>"
+    ]
+  },
+  {
+    "objectID": "fundamentals.html",
+    "href": "fundamentals.html",
+    "title": "Fundamentals of LLMs",
+    "section": "",
+    "text": "Fundamentals of LLMs\nThis section builds the theoretical foundation for understanding Large Language Models. You’ll learn about neural networks, transformer architecture, and how modern LLMs process and generate text.",
+    "crumbs": [
+      "Fundamentals of LLMs"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html",
+    "href": "01-fundamentals/01-neural-networks.html",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "",
+    "text": "4.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Calculate perceptron outputs by hand for simple decisions - Understand neural network architecture and how layers connect - Perform forward propagation step-by-step through a network - Grasp backpropagation basics and how networks learn from mistakes - Visualize how networks process information - Prepare for advanced topics like transformers and embeddings",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#introduction",
+    "href": "01-fundamentals/01-neural-networks.html#introduction",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.2 Introduction",
+    "text": "4.2 Introduction\nWelcome to Neural Networks Fundamentals! Today you’ll learn the mathematical foundations of deep learning by working through calculations by hand. No coding required - we’ll focus on understanding how neural networks think and learn at the most basic level.\nDuration: 2 hours\nWhat you need: Basic algebra and willingness to work through math step-by-step\nApproach: Hand calculations and visual understanding",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#what-you-should-know",
+    "href": "01-fundamentals/01-neural-networks.html#what-you-should-know",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.3 What You Should Know",
+    "text": "4.3 What You Should Know\n\n4.3.1 Prerequisites\n\nBasic algebra and arithmetic\nUnderstanding of functions (input → output)\nFamiliarity with graphs and coordinates\nMatrix multiplication basics (we’ll review this)\n\n\n\n4.3.2 Learning Approach\nThis lab is calculation-intensive but beginner-friendly: - Step-by-step guidance: Every calculation broken down clearly - Real examples: “Should we go to the beach?” and other relatable decisions - Visual aids: Diagrams showing information flow - Immediate understanding: See exactly how each step contributes",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#session-1-perceptron-by-hand-50-minutes",
+    "href": "01-fundamentals/01-neural-networks.html#session-1-perceptron-by-hand-50-minutes",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.4 Session 1: Perceptron by Hand (50 minutes)",
+    "text": "4.4 Session 1: Perceptron by Hand (50 minutes)\n\n4.4.1 What we’ll do: Build your first “artificial brain cell”\nExercise: Work through the “Should we go to the beach?” decision problem - Calculate weighted inputs step-by-step - Apply activation functions to make binary decisions - Understand the geometry of linear decision boundaries - Practice with multiple examples and variations - Explore different scenarios and weight adjustments\nYou’ll learn: How the simplest neural network makes decisions\n\n\n4.4.2 The Problems You’ll Solve\nPerceptron Example: “Should we go to the beach?” - Inputs: Weather conditions (sunny, temperature, humidity) - Process: Weight each factor and make a decision - Output: Yes/No decision with confidence",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#session-2-backpropagation-by-hand-50-minutes",
+    "href": "01-fundamentals/01-neural-networks.html#session-2-backpropagation-by-hand-50-minutes",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.5 Session 2: Backpropagation by Hand (50 minutes)",
+    "text": "4.5 Session 2: Backpropagation by Hand (50 minutes)\n\n4.5.1 What we’ll do: Discover how networks learn from their mistakes\n\nStart with a simple multi-layer network example\nMake a prediction and calculate the error\nWork backwards through the network using chain rule\nCalculate gradients and weight updates step-by-step\nUnderstand gradient descent intuitively\nPractice with a complete learning cycle example\n\nYou’ll learn: The magic behind how neural networks improve over time\n\n\n4.5.2 Neural Network Example**: Complex pattern recognition\n\nArchitecture: Input → Hidden Layer → Output\nForward Pass: Calculate predictions\nBackward Pass: Learn from mistakes",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#mathematical-skills-youll-develop",
+    "href": "01-fundamentals/01-neural-networks.html#mathematical-skills-youll-develop",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.6 Mathematical Skills You’ll Develop",
+    "text": "4.6 Mathematical Skills You’ll Develop\nMathematical Skills: - Matrix multiplication in neural network context - Understanding weighted sums and activation functions - Basic calculus concepts (derivatives for learning) - Visualization of mathematical concepts\nConceptual Skills: - How information flows through networks - Why networks can learn complex patterns - The relationship between structure and function - Preparing for more advanced architectures",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#wrap-up-and-reflection",
+    "href": "01-fundamentals/01-neural-networks.html#wrap-up-and-reflection",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.7 Wrap-up and Reflection",
+    "text": "4.7 Wrap-up and Reflection\n\n4.7.1 Review the Complete Journey\n\nFrom simple decisions to learning\nDiscuss what surprised you most about the mathematics\nConnect to modern AI: How these principles scale to large networks\nPreview Chapter 2: Transformers and Embeddings\n\n\n\n4.7.2 Key Takeaways\n\nNeural networks are mathematical functions that can learn\nThe perceptron is the building block of all neural networks\nBackpropagation enables learning through error correction\nThese principles scale to modern AI systems",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#connection-to-research",
+    "href": "01-fundamentals/01-neural-networks.html#connection-to-research",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.8 Connection to Research",
+    "text": "4.8 Connection to Research\n\n4.8.1 Why This Matters for Social Science\n\nUnderstanding AI tools: Know how the tools you use actually work\nInterpreting results: Better understand what AI outputs mean\nDesigning studies: Create better prompts and inputs for AI systems\nEthical considerations: Understand limitations and potential biases\n\n\n\n4.8.2 Research Applications\n\nSurvey design: Understanding how AI might process responses\nData analysis: Knowing how AI models interpret your data\nLiterature review: Understanding AI summarization capabilities\nCommunication: Explaining AI concepts to research participants",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/01-neural-networks.html#navigation",
+    "href": "01-fundamentals/01-neural-networks.html#navigation",
+    "title": "4  Neural Networks Fundamentals",
+    "section": "4.9 Navigation",
+    "text": "4.9 Navigation\nPrevious: Technical Setup & Learning Strategies ←\nNext: Transformers and Embeddings →",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Neural Networks Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html",
+    "href": "01-fundamentals/02-transformers.html",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "",
+    "text": "5.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Embedding Mastery: Understand how words and concepts are represented as vectors - Attention Mechanism: Calculate self-attention by hand and understand its purpose - Transformer Architecture: Comprehend the complete transformer model structure - Query-Key-Value System: Master the fundamental attention computation framework",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#introduction",
+    "href": "01-fundamentals/02-transformers.html#introduction",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.2 Introduction",
+    "text": "5.2 Introduction\nThis chapter explores the evolution from neural networks to transformers, the architecture that powers modern Large Language Models. You’ll learn how words become numbers and how attention mechanisms enable models to understand context.",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#pre-chapter-learning-2-hours",
+    "href": "01-fundamentals/02-transformers.html#pre-chapter-learning-2-hours",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.3 Pre-Chapter Learning (2 hours)",
+    "text": "5.3 Pre-Chapter Learning (2 hours)\n\n5.3.1 Materials:\n\nVector Embeddings Foundation (30 minutes)\n\nWord Embeddings Explained (StatQuest) - 11-minute video on word representations\nWhat are Word Embeddings? (IBM) - Technical overview (15 min read)\n\nTransformer Architecture (60 minutes)\n\nAttention Is All You Need (Paper Summary) - 30-minute explanation of the original paper\nDeep Dive into Transformers by Hand - Detailed mathematical walkthrough (30 min read)\n\nAttention Mechanisms (30 minutes)\n\nKeys, Queries, Values Explained - Core attention concepts (15 min read)",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#session-1-vector-embeddings-deep-dive-30-minutes",
+    "href": "01-fundamentals/02-transformers.html#session-1-vector-embeddings-deep-dive-30-minutes",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.4 Session 1: Vector Embeddings Deep Dive (30 minutes)",
+    "text": "5.4 Session 1: Vector Embeddings Deep Dive (30 minutes)\n\n5.4.1 Understanding How Words Become Numbers\nKey Concept: Vector embeddings transform words into numerical representations that capture meaning and relationships.\nExercise: Vector Embeddings Practice - Explore how words are represented as vectors - Understand similarity and distance in vector space - Practice with word analogies and relationships\nYou’ll learn: How words become numbers that preserve meaning\n\n\n5.4.2 Vector Database Applications\n\nSimilarity search: Finding related concepts\nClustering: Grouping similar ideas\nRecommendation systems: Suggesting related content\nResearch applications: Literature review and synthesis",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#session-2-self-attention-mechanism-by-hand-40-minutes",
+    "href": "01-fundamentals/02-transformers.html#session-2-self-attention-mechanism-by-hand-40-minutes",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.5 Session 2: Self-Attention Mechanism by Hand (40 minutes)",
+    "text": "5.5 Session 2: Self-Attention Mechanism by Hand (40 minutes)\n\n5.5.1 The Heart of Transformer Architecture\nKey Concept: Self-attention allows positions to attend to other positions in the sequence, capturing relationships between words.\nExercise: Self-Attention Calculation - Calculate attention scores step-by-step - Understand query, key, and value matrices - Practice attention computation by hand - Visualize attention patterns\nMathematical Foundation:\nAttention(Q,K,V) = softmax(QK^T/√d_k)V\n\n\n5.5.2 Why Attention Matters\n\nContext understanding: Words can attend to relevant context\nLong-range dependencies: Capture relationships across long sequences\nInterpretability: Attention weights show what the model focuses on\nFlexibility: Can attend to any position in the sequence",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#session-3-complete-transformer-architecture-25-minutes",
+    "href": "01-fundamentals/02-transformers.html#session-3-complete-transformer-architecture-25-minutes",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.6 Session 3: Complete Transformer Architecture (25 minutes)",
+    "text": "5.6 Session 3: Complete Transformer Architecture (25 minutes)\n\n5.6.1 From Attention to Full Model\nExercise: Transformer Architecture Walkthrough - Understand the complete transformer structure - Explore encoder and decoder components - Practice with a complete example - Connect to real-world applications\n\n\n5.6.2 Transformer Components\n\nInput Embeddings: Convert words to vectors\nPositional Encoding: Add position information\nMulti-Head Attention: Multiple attention mechanisms\nFeed-Forward Networks: Process attended information\nLayer Normalization: Stabilize training\nResidual Connections: Help with gradient flow",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#key-concepts",
+    "href": "01-fundamentals/02-transformers.html#key-concepts",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.7 Key Concepts",
+    "text": "5.7 Key Concepts\n\n\n\n\n\n\n\n\nConcept\nDescription\nMathematical Foundation\n\n\n\n\nVector Embeddings\nDense numerical representations of words/concepts\nContinuous vector space mapping\n\n\nSelf-Attention\nMechanism allowing positions to attend to other positions\nScaled dot-product: Attention(Q,K,V) = softmax(QK^T/√d_k)V\n\n\nQuery, Key, Value\nThree matrices that enable attention computation\nLinear projections: Q=XW_Q, K=XW_K, V=XW_V",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#connection-to-research",
+    "href": "01-fundamentals/02-transformers.html#connection-to-research",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.8 Connection to Research",
+    "text": "5.8 Connection to Research\n\n5.8.1 Why Transformers Matter for Social Science\n\nText understanding: Better comprehension of complex documents\nContext awareness: Models understand relationships between concepts\nScalability: Can process large amounts of text efficiently\nInterpretability: Attention weights show what models focus on\n\n\n\n5.8.2 Research Applications\n\nDocument analysis: Understanding complex research papers\nSurvey analysis: Processing open-ended responses\nLiterature review: Synthesizing multiple sources\nContent generation: Creating research summaries",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#advanced-topics-preview",
+    "href": "01-fundamentals/02-transformers.html#advanced-topics-preview",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.9 Advanced Topics Preview",
+    "text": "5.9 Advanced Topics Preview\n\n5.9.1 Multi-Head Attention\n\nMultiple attention mechanisms running in parallel\nCaptures different types of relationships\nEnables richer representations\n\n\n\n5.9.2 Positional Encoding\n\nAdds position information to embeddings\nEnables understanding of word order\nCritical for sequence processing\n\n\n\n5.9.3 Layer Normalization\n\nStabilizes training process\nImproves convergence\nEssential for deep networks",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#connection-to-chapter-3",
+    "href": "01-fundamentals/02-transformers.html#connection-to-chapter-3",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.10 Connection to Chapter 3",
+    "text": "5.10 Connection to Chapter 3\nThis chapter prepares you for Chapter 3 where you’ll use pre-trained transformer models (BERT, GPT, etc.) through Hugging Face for practical NLP applications. You’ll apply the theoretical understanding gained here to real-world tasks like text classification, NER, and generation.",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "01-fundamentals/02-transformers.html#navigation",
+    "href": "01-fundamentals/02-transformers.html#navigation",
+    "title": "5  Transformers and Embeddings Fundamentals",
+    "section": "5.11 Navigation",
+    "text": "5.11 Navigation\nPrevious: Neural Networks Fundamentals ←\nNext: LLM Capabilities →",
+    "crumbs": [
+      "Fundamentals of LLMs",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Transformers and Embeddings Fundamentals</span>"
+    ]
+  },
+  {
+    "objectID": "llms-in-action.html",
+    "href": "llms-in-action.html",
+    "title": "LLMs in Action",
+    "section": "",
+    "text": "LLMs in Action\nThis section focuses on practical applications of Large Language Models. You’ll explore LLM capabilities and limitations, work with APIs, and learn how to apply these tools to real research tasks.",
+    "crumbs": [
+      "LLMs in Action"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html",
+    "href": "02-llms-in-action/01-llm-capabilities.html",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "",
+    "text": "7 LLM Capabilities and Limitations",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#learning-objectives",
+    "href": "02-llms-in-action/01-llm-capabilities.html#learning-objectives",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.1 Learning Objectives",
+    "text": "7.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Understand the capabilities and limitations of modern LLMs - Use Hugging Face to explore different models - Recognize when LLMs are appropriate for research tasks - Identify potential biases and limitations in LLM outputs - Apply LLMs to basic text analysis tasks",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#introduction",
+    "href": "02-llms-in-action/01-llm-capabilities.html#introduction",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.2 Introduction",
+    "text": "7.2 Introduction\nThis chapter introduces you to real Large Language Models through hands-on exploration. You’ll learn what LLMs can and cannot do, and how to use them responsibly in your research.",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#pre-chapter-learning-30-minutes",
+    "href": "02-llms-in-action/01-llm-capabilities.html#pre-chapter-learning-30-minutes",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.3 Pre-Chapter Learning (30 minutes)",
+    "text": "7.3 Pre-Chapter Learning (30 minutes)\n\n7.3.1 Materials:\n\nHugging Face Introduction (15 minutes)\n\nHugging Face Course - Introduction to the platform\nModel Hub Overview - Understanding available models\n\nLLM Capabilities Overview (15 minutes)\n\nWhat Can Language Models Do? - Research paper on capabilities\nLimitations of Language Models - Understanding limitations",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#session-1-exploring-llm-capabilities-45-minutes",
+    "href": "02-llms-in-action/01-llm-capabilities.html#session-1-exploring-llm-capabilities-45-minutes",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.4 Session 1: Exploring LLM Capabilities (45 minutes)",
+    "text": "7.4 Session 1: Exploring LLM Capabilities (45 minutes)\n\n7.4.1 What LLMs Can Do\nText Generation - Complete sentences and paragraphs - Generate creative content - Answer questions based on training data - Translate between languages\nText Classification - Categorize documents by topic - Identify sentiment in text - Detect spam or inappropriate content - Classify research papers by field\nQuestion Answering - Answer factual questions - Provide explanations - Generate summaries - Extract information from text\nCode Generation - Write simple code snippets - Debug existing code - Explain code functionality - Generate documentation\n\n\n7.4.2 Hands-On Exercise: Model Exploration\n# Example: Exploring different models\nfrom transformers import pipeline\n\n# Text classification\nclassifier = pipeline(\"text-classification\")\nresult = classifier(\"I love this research paper!\")\nprint(result)\n\n# Question answering\nqa = pipeline(\"question-answering\")\ncontext = \"The study found that social media use is associated with increased anxiety.\"\nquestion = \"What did the study find?\"\nanswer = qa(question=question, context=context)\nprint(answer)",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#session-2-understanding-llm-limitations-45-minutes",
+    "href": "02-llms-in-action/01-llm-capabilities.html#session-2-understanding-llm-limitations-45-minutes",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.5 Session 2: Understanding LLM Limitations (45 minutes)",
+    "text": "7.5 Session 2: Understanding LLM Limitations (45 minutes)\n\n7.5.1 What LLMs Cannot Do\nFactual Accuracy - May generate incorrect information - Cannot access real-time data - Limited to training data cutoff - May “hallucinate” plausible but false information\nReasoning and Logic - Struggle with complex reasoning - May make logical errors - Limited mathematical capabilities - Cannot perform true understanding\nBias and Fairness - Reflect biases in training data - May perpetuate stereotypes - Can amplify existing inequalities - Requires careful evaluation\nContext Understanding - Limited context window - May miss nuanced meaning - Can be sensitive to prompt wording - May not understand domain-specific knowledge\n\n\n7.5.2 Exercise: Identifying Limitations\nTask: Analyze LLM outputs for potential issues - Test factual accuracy with known information - Evaluate bias in responses - Check for logical consistency - Assess domain knowledge limitations",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#session-3-practical-applications-for-research-30-minutes",
+    "href": "02-llms-in-action/01-llm-capabilities.html#session-3-practical-applications-for-research-30-minutes",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.6 Session 3: Practical Applications for Research (30 minutes)",
+    "text": "7.6 Session 3: Practical Applications for Research (30 minutes)\n\n7.6.1 Research Use Cases\nLiterature Review - Summarize research papers - Identify key themes and findings - Generate research questions - Create annotated bibliographies\nSurvey Analysis - Code open-ended responses - Identify common themes - Generate follow-up questions - Analyze sentiment in responses\nContent Generation - Draft research summaries - Create presentation outlines - Generate grant proposal sections - Write accessible explanations\nData Preprocessing - Clean and standardize text data - Remove irrelevant content - Identify and handle missing data - Prepare data for analysis\n\n\n7.6.2 Exercise: Research Application\n# Example: Analyzing survey responses\nresponses = [\n    \"I feel overwhelmed by social media pressure\",\n    \"Social media helps me stay connected\",\n    \"I spend too much time on my phone\"\n]\n\n# Use LLM to identify themes\nfor response in responses:\n    # Analyze sentiment and themes\n    # Generate coding categories\n    # Identify key concepts\n    pass",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#ethical-considerations",
+    "href": "02-llms-in-action/01-llm-capabilities.html#ethical-considerations",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.7 Ethical Considerations",
+    "text": "7.7 Ethical Considerations\n\n7.7.1 Responsible Use Guidelines\nTransparency - Document all LLM usage in methods - Disclose when AI tools are used - Be clear about limitations - Share prompts and parameters\nEvaluation - Always verify LLM outputs - Cross-check with reliable sources - Consider multiple perspectives - Acknowledge potential biases\nPrivacy - Don’t share sensitive data with LLMs - Be careful with participant information - Consider data retention policies - Protect confidential information\nFairness - Evaluate outputs for bias - Consider diverse perspectives - Test with different populations - Acknowledge limitations",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#connection-to-research",
+    "href": "02-llms-in-action/01-llm-capabilities.html#connection-to-research",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.8 Connection to Research",
+    "text": "7.8 Connection to Research\n\n7.8.1 When to Use LLMs\nAppropriate Uses - Initial exploration of large datasets - Generating research hypotheses - Creating draft content - Automating routine tasks\nInappropriate Uses - Making final research decisions - Replacing human judgment - Analyzing sensitive data - Generating definitive conclusions\n\n\n7.8.2 Best Practices\nFor Literature Reviews - Use LLMs to identify themes and patterns - Always verify key findings manually - Cross-reference with original sources - Maintain critical perspective\nFor Survey Analysis - Use LLMs for initial coding - Verify coding with human review - Consider multiple coding approaches - Document coding decisions\nFor Content Generation - Use LLMs for drafting and brainstorming - Always edit and review generated content - Maintain your voice and perspective - Ensure accuracy and appropriateness",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/01-llm-capabilities.html#navigation",
+    "href": "02-llms-in-action/01-llm-capabilities.html#navigation",
+    "title": "6  LLM Capabilities and Limitations",
+    "section": "7.9 Navigation",
+    "text": "7.9 Navigation\nPrevious: Transformers and Embeddings ←\nNext: LLM APIs →",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>LLM Capabilities and Limitations</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html",
+    "href": "02-llms-in-action/02-llm-apis.html",
+    "title": "7  Working with LLM APIs",
+    "section": "",
+    "text": "8 Working with LLM APIs",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#learning-objectives",
+    "href": "02-llms-in-action/02-llm-apis.html#learning-objectives",
+    "title": "7  Working with LLM APIs",
+    "section": "8.1 Learning Objectives",
+    "text": "8.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Understand how to interact with LLM APIs - Use prompt engineering techniques effectively - Handle API responses and errors - Apply LLMs to real research tasks - Implement best practices for API usage",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#introduction",
+    "href": "02-llms-in-action/02-llm-apis.html#introduction",
+    "title": "7  Working with LLM APIs",
+    "section": "8.2 Introduction",
+    "text": "8.2 Introduction\nThis chapter teaches you how to work with Large Language Model APIs, including prompt engineering, response handling, and practical applications for research. You’ll learn to communicate effectively with AI systems and get the most out of their capabilities.",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#pre-chapter-learning-30-minutes",
+    "href": "02-llms-in-action/02-llm-apis.html#pre-chapter-learning-30-minutes",
+    "title": "7  Working with LLM APIs",
+    "section": "8.3 Pre-Chapter Learning (30 minutes)",
+    "text": "8.3 Pre-Chapter Learning (30 minutes)\n\n8.3.1 Materials:\n\nAPI Basics (15 minutes)\n\nWhat are APIs? - Introduction to APIs\nREST API Tutorial - Understanding API communication\n\nPrompt Engineering (15 minutes)\n\nPrompt Engineering Guide - Best practices for prompts\nOpenAI API Documentation - Technical reference",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#session-1-understanding-apis-30-minutes",
+    "href": "02-llms-in-action/02-llm-apis.html#session-1-understanding-apis-30-minutes",
+    "title": "7  Working with LLM APIs",
+    "section": "8.4 Session 1: Understanding APIs (30 minutes)",
+    "text": "8.4 Session 1: Understanding APIs (30 minutes)\n\n8.4.1 What are APIs?\nApplication Programming Interfaces (APIs) are ways for different software systems to communicate with each other. In the context of LLMs, APIs allow you to send text to an AI model and receive responses.\n\n\n8.4.2 Key Concepts\nHTTP Requests - GET: Retrieve information - POST: Send data to the server - PUT/PATCH: Update existing data - DELETE: Remove data\nAPI Endpoints - Specific URLs that accept requests - Different endpoints for different functions - Authentication required for most services\nResponse Formats - JSON (JavaScript Object Notation) is most common - Structured data that’s easy to parse - Contains the AI’s response and metadata\n\n\n8.4.3 Example API Call\nimport requests\n\n# Example API call structure\nurl = \"https://api.openai.com/v1/chat/completions\"\nheaders = {\n    \"Authorization\": \"Bearer YOUR_API_KEY\",\n    \"Content-Type\": \"application/json\"\n}\ndata = {\n    \"model\": \"gpt-3.5-turbo\",\n    \"messages\": [\n        {\"role\": \"user\", \"content\": \"Hello, how are you?\"}\n    ]\n}\n\nresponse = requests.post(url, headers=headers, json=data)\nresult = response.json()\nprint(result['choices'][0]['message']['content'])",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#session-2-prompt-engineering-45-minutes",
+    "href": "02-llms-in-action/02-llm-apis.html#session-2-prompt-engineering-45-minutes",
+    "title": "7  Working with LLM APIs",
+    "section": "8.5 Session 2: Prompt Engineering (45 minutes)",
+    "text": "8.5 Session 2: Prompt Engineering (45 minutes)\n\n8.5.1 What is Prompt Engineering?\nPrompt engineering is the practice of designing inputs to AI systems to get the best possible outputs. It’s like learning to speak the AI’s language effectively.\n\n\n8.5.2 Basic Prompting Techniques\nClear Instructions\n❌ Bad: \"Tell me about social media\"\n✅ Good: \"Provide a 3-paragraph summary of the psychological effects of social media use on teenagers, focusing on anxiety and depression.\"\nContext Setting\n❌ Bad: \"Analyze this text\"\n✅ Good: \"You are a social science researcher analyzing survey responses. Analyze the following text for themes related to mental health: [text]\"\nOutput Formatting\n❌ Bad: \"List the themes\"\n✅ Good: \"Identify the top 3 themes in the following text and format your response as:\n1. Theme name: Brief description\n2. Theme name: Brief description\n3. Theme name: Brief description\"\n\n\n8.5.3 Advanced Prompting Techniques\nFew-Shot Learning\nExample 1:\nInput: \"I feel stressed about work\"\nOutput: Theme: Work-related stress\n\nExample 2:\nInput: \"My relationship is causing anxiety\"\nOutput: Theme: Relationship stress\n\nNow analyze: \"I'm worried about my finances\"\nChain-of-Thought\n❌ Bad: \"What's the answer?\"\n✅ Good: \"Let's approach this step by step:\n1. First, identify the key concepts\n2. Then, analyze their relationships\n3. Finally, draw a conclusion\n\nQuestion: [your question]\"\nRole-Based Prompting\n\"You are an expert social science researcher with 20 years of experience in qualitative data analysis. Your task is to...\"",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#session-3-practical-applications-45-minutes",
+    "href": "02-llms-in-action/02-llm-apis.html#session-3-practical-applications-45-minutes",
+    "title": "7  Working with LLM APIs",
+    "section": "8.6 Session 3: Practical Applications (45 minutes)",
+    "text": "8.6 Session 3: Practical Applications (45 minutes)\n\n8.6.1 Research Applications\nLiterature Review Assistance\nprompt = \"\"\"\nYou are a research assistant helping with a literature review on social media and mental health.\n\nGiven the following research paper abstract, please:\n1. Identify the main research question\n2. List the key findings\n3. Note any limitations mentioned\n4. Suggest how this relates to other research in the field\n\nAbstract: [paper abstract]\n\"\"\"\nSurvey Response Analysis\nprompt = \"\"\"\nYou are analyzing open-ended survey responses about social media use.\n\nFor each response, identify:\n1. Primary theme (e.g., addiction, connection, privacy)\n2. Sentiment (positive, negative, neutral, mixed)\n3. Key concerns or benefits mentioned\n4. Suggested follow-up questions\n\nResponse: [survey response]\n\"\"\"\nContent Generation\nprompt = \"\"\"\nYou are writing a research summary for a general audience.\n\nPlease convert the following academic findings into accessible language:\n- Use simple, clear language\n- Avoid jargon\n- Include practical implications\n- Keep it under 200 words\n\nFindings: [research findings]\n\"\"\"\n\n\n8.6.2 Exercise: Building a Research Tool\nTask: Create a simple survey analysis tool\ndef analyze_survey_response(response, api_client):\n    prompt = f\"\"\"\n    Analyze this survey response about social media use:\n    \n    Response: {response}\n    \n    Please provide:\n    1. Main theme (one word)\n    2. Sentiment (positive/negative/neutral)\n    3. Key concerns (list)\n    4. Suggested follow-up question\n    \"\"\"\n    \n    # Send to API and process response\n    # Return structured analysis\n    pass",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#error-handling-and-best-practices",
+    "href": "02-llms-in-action/02-llm-apis.html#error-handling-and-best-practices",
+    "title": "7  Working with LLM APIs",
+    "section": "8.7 Error Handling and Best Practices",
+    "text": "8.7 Error Handling and Best Practices\n\n8.7.1 Common API Errors\nRate Limiting - Too many requests too quickly - Solution: Implement delays between requests - Monitor usage limits\nAuthentication Errors - Invalid or expired API key - Solution: Check API key and permissions - Rotate keys regularly\nModel Errors - Model unavailable or overloaded - Solution: Implement retry logic - Have fallback models\n\n\n8.7.2 Best Practices\nSecurity - Never share API keys in code - Use environment variables - Monitor API usage and costs - Implement proper error handling\nEfficiency - Batch requests when possible - Cache responses when appropriate - Use appropriate model sizes - Monitor response times\nQuality - Always validate responses - Implement human review for important outputs - Test with diverse inputs - Document prompt strategies",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#connection-to-research",
+    "href": "02-llms-in-action/02-llm-apis.html#connection-to-research",
+    "title": "7  Working with LLM APIs",
+    "section": "8.8 Connection to Research",
+    "text": "8.8 Connection to Research\n\n8.8.1 When to Use APIs vs. Local Models\nUse APIs When: - You need the latest models - You don’t have computational resources - You need quick prototyping - You want to try multiple models\nUse Local Models When: - You have sensitive data - You need consistent performance - You want to avoid API costs - You need offline capabilities\n\n\n8.8.2 Research Workflow Integration\nPlanning Phase - Use LLMs to generate research questions - Explore potential methodologies - Identify relevant literature\nData Collection - Generate survey questions - Create interview protocols - Design coding schemes\nAnalysis Phase - Code qualitative data - Identify themes and patterns - Generate hypotheses\nWriting Phase - Draft research summaries - Create presentation outlines - Generate accessible explanations",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "02-llms-in-action/02-llm-apis.html#navigation",
+    "href": "02-llms-in-action/02-llm-apis.html#navigation",
+    "title": "7  Working with LLM APIs",
+    "section": "8.9 Navigation",
+    "text": "8.9 Navigation\nPrevious: LLM Capabilities ←\nNext: RAG and Context →",
+    "crumbs": [
+      "LLMs in Action",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Working with LLM APIs</span>"
+    ]
+  },
+  {
+    "objectID": "contextualizing-llms.html",
+    "href": "contextualizing-llms.html",
+    "title": "Contextualizing LLMs",
+    "section": "",
+    "text": "Contextualizing LLMs\nThis section covers advanced techniques for providing context to Large Language Models. You’ll learn about RAG, knowledge graphs, and how to build complete applications with user interfaces.",
+    "crumbs": [
+      "Contextualizing LLMs"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html",
+    "href": "03-contextualizing-llms/01-rag-context.html",
+    "title": "8  RAG and Context Engineering",
+    "section": "",
+    "text": "9 RAG and Context Engineering",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#learning-objectives",
+    "href": "03-contextualizing-llms/01-rag-context.html#learning-objectives",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.1 Learning Objectives",
+    "text": "9.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Understand the difference between Plain LLM, RAG, and GraphRAG approaches - Learn how vector databases enable semantic search - Build and interpret simple knowledge graphs - Practice model selection and fallback for robust AI research - Compare and reflect on the strengths of each approach for research",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#introduction",
+    "href": "03-contextualizing-llms/01-rag-context.html#introduction",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.2 Introduction",
+    "text": "9.2 Introduction\nThis chapter explores advanced techniques for providing context to Large Language Models. You’ll learn about Retrieval-Augmented Generation (RAG), knowledge graphs, and how to combine them for more accurate and contextual AI responses.",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#pre-chapter-learning-30-minutes",
+    "href": "03-contextualizing-llms/01-rag-context.html#pre-chapter-learning-30-minutes",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.3 Pre-Chapter Learning (30 minutes)",
+    "text": "9.3 Pre-Chapter Learning (30 minutes)\n\n9.3.1 Materials:\n\nVector Databases Foundation (15 minutes)\n\nWhat is a Vector Database? (Pinecone) - Industry overview\nWhat is a Knowledge Graph? (YouTube) - Visual intro\n\nRAG Concepts (15 minutes)\n\nRAG vs. GraphRAG (YouTube) - Quick comparison\nPreview the hands-on exercises",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#session-1-understanding-rag-40-minutes",
+    "href": "03-contextualizing-llms/01-rag-context.html#session-1-understanding-rag-40-minutes",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.4 Session 1: Understanding RAG (40 minutes)",
+    "text": "9.4 Session 1: Understanding RAG (40 minutes)\n\n9.4.1 What is Retrieval-Augmented Generation?\nRAG combines the power of Large Language Models with external knowledge sources. Instead of relying solely on the model’s training data, RAG retrieves relevant information and provides it as context to the LLM.\n\n\n9.4.2 How RAG Works\n\nQuery Processing: Convert user question into search terms\nRetrieval: Search external knowledge base for relevant documents\nContext Injection: Provide retrieved documents to LLM\nGeneration: LLM generates answer using provided context\n\n\n\n9.4.3 Example: Philosophy Research\n# Example: Researching philosophical concepts\nquery = \"What did Kant say about moral duty?\"\n\n# RAG Process:\n# 1. Search philosophy papers for Kant + moral duty\n# 2. Retrieve relevant passages\n# 3. Provide context to LLM\n# 4. Generate answer based on retrieved information\n\n\n9.4.4 Advantages of RAG\nAccuracy - Based on specific, relevant information - Reduces hallucination - More up-to-date than training data\nTransparency - Can cite sources - Traceable to original documents - Verifiable information\nFlexibility - Can use any knowledge base - Adaptable to different domains - Easy to update with new information",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#session-2-vector-databases-and-semantic-search-35-minutes",
+    "href": "03-contextualizing-llms/01-rag-context.html#session-2-vector-databases-and-semantic-search-35-minutes",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.5 Session 2: Vector Databases and Semantic Search (35 minutes)",
+    "text": "9.5 Session 2: Vector Databases and Semantic Search (35 minutes)\n\n9.5.1 Understanding Vector Embeddings\nVector embeddings represent text as numerical vectors that capture meaning and relationships.\n\n\n9.5.2 Semantic Search Process\n\nDocument Embedding: Convert documents to vectors\nQuery Embedding: Convert search query to vector\nSimilarity Calculation: Find most similar document vectors\nRetrieval: Return most relevant documents\n\n\n\n9.5.3 Example: Research Paper Search\n# Example: Finding relevant research papers\nquery = \"social media effects on mental health\"\n\n# Vector search finds papers about:\n# - Social media and depression\n# - Instagram and anxiety\n# - Facebook and well-being\n# - Digital technology and psychology\n\n\n9.5.4 Vector Database Applications\nLiterature Review - Find related research papers - Identify research gaps - Discover emerging themes\nSurvey Analysis - Group similar responses - Identify common themes - Find representative examples\nContent Recommendation - Suggest related articles - Find similar research questions - Recommend follow-up studies",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#session-3-knowledge-graphs-30-minutes",
+    "href": "03-contextualizing-llms/01-rag-context.html#session-3-knowledge-graphs-30-minutes",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.6 Session 3: Knowledge Graphs (30 minutes)",
+    "text": "9.6 Session 3: Knowledge Graphs (30 minutes)\n\n9.6.1 What are Knowledge Graphs?\nKnowledge graphs represent information as networks of connected entities and relationships. They capture not just individual facts, but the relationships between them.\n\n\n9.6.2 Knowledge Graph Structure\nEntities: People, places, concepts, events Relationships: Connections between entities Properties: Attributes of entities\n\n\n9.6.3 Example: Research Domain Knowledge Graph\nEntities:\n- Social Media (concept)\n- Mental Health (concept)\n- Instagram (platform)\n- Depression (condition)\n\nRelationships:\n- Instagram -&gt; affects -&gt; Mental Health\n- Social Media -&gt; includes -&gt; Instagram\n- Depression -&gt; is_a -&gt; Mental Health condition\n- Instagram -&gt; associated_with -&gt; Depression\n\n\n9.6.4 Building Knowledge Graphs\nManual Construction - Define entities and relationships - Create structured data - Validate connections\nAutomated Extraction - Use NLP to extract entities - Identify relationships from text - Validate with human review\nHybrid Approaches - Start with manual structure - Automate extraction for scale - Human validation for quality",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#session-4-graphrag---combining-approaches-25-minutes",
+    "href": "03-contextualizing-llms/01-rag-context.html#session-4-graphrag---combining-approaches-25-minutes",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.7 Session 4: GraphRAG - Combining Approaches (25 minutes)",
+    "text": "9.7 Session 4: GraphRAG - Combining Approaches (25 minutes)\n\n9.7.1 What is GraphRAG?\nGraphRAG combines traditional RAG with knowledge graph information to provide richer context and better understanding of relationships.\n\n\n9.7.2 GraphRAG Process\n\nTraditional RAG: Retrieve relevant documents\nGraph Enhancement: Add knowledge graph information\nRelationship Analysis: Identify connections between concepts\nEnhanced Context: Provide both documents and graph information to LLM\n\n\n\n9.7.3 Example: Philosophy Research with GraphRAG\n# Research question: \"How do different philosophers view free will?\"\n\n# Traditional RAG finds:\n# - Papers about Kant and free will\n# - Papers about Hume and determinism\n# - Papers about contemporary views\n\n# GraphRAG also finds:\n# - Connections between Kant and Hume\n# - Historical development of ideas\n# - Related concepts (causality, responsibility)\n# - Influence relationships between philosophers\n\n\n9.7.4 Advantages of GraphRAG\nRicher Context - Documents + relationships - Historical development - Influence networks - Related concepts\nBetter Understanding - Contextual relationships - Temporal development - Influence patterns - Conceptual connections\nMore Comprehensive Answers - Multiple perspectives - Historical context - Related concepts - Influence networks",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#practical-applications-for-research",
+    "href": "03-contextualizing-llms/01-rag-context.html#practical-applications-for-research",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.8 Practical Applications for Research",
+    "text": "9.8 Practical Applications for Research\n\n9.8.1 Literature Review Enhancement\nTraditional Approach - Read papers individually - Manual synthesis - Limited to direct citations\nGraphRAG Approach - Automated paper discovery - Relationship identification - Comprehensive synthesis - Influence network analysis\n\n\n9.8.2 Survey Analysis\nTraditional Approach - Manual coding - Limited to direct responses - Time-consuming analysis\nGraphRAG Approach - Automated theme identification - Relationship discovery - Comprehensive analysis - Pattern recognition\n\n\n9.8.3 Research Planning\nTraditional Approach - Manual literature review - Limited scope - Time-intensive\nGraphRAG Approach - Automated gap identification - Comprehensive coverage - Relationship discovery - Efficient planning",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#implementation-considerations",
+    "href": "03-contextualizing-llms/01-rag-context.html#implementation-considerations",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.9 Implementation Considerations",
+    "text": "9.9 Implementation Considerations\n\n9.9.1 Technical Requirements\nVector Database - Pinecone, Weaviate, or similar - Storage for document embeddings - Search capabilities\nKnowledge Graph - Neo4j, ArangoDB, or similar - Graph query capabilities - Relationship management\nIntegration - API connections - Data synchronization - Response generation\n\n\n9.9.2 Best Practices\nData Quality - Clean, structured documents - Validated relationships - Regular updates\nPerformance - Efficient search algorithms - Caching strategies - Scalable architecture\nEvaluation - Accuracy metrics - Relevance assessment - Human validation",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#connection-to-research",
+    "href": "03-contextualizing-llms/01-rag-context.html#connection-to-research",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.10 Connection to Research",
+    "text": "9.10 Connection to Research\n\n9.10.1 When to Use Each Approach\nPlain LLM - General questions - Creative tasks - Quick responses - Limited context needs\nRAG - Factual questions - Domain-specific queries - Source citation needs - Up-to-date information\nGraphRAG - Complex research questions - Relationship analysis - Historical development - Comprehensive understanding\n\n\n9.10.2 Research Workflow Integration\nPlanning Phase - Use GraphRAG for comprehensive literature review - Identify research gaps and relationships - Plan methodology based on existing work\nAnalysis Phase - Use RAG for specific fact-checking - Apply GraphRAG for relationship analysis - Combine approaches for comprehensive understanding\nWriting Phase - Use RAG for source citation - Apply GraphRAG for context development - Ensure comprehensive coverage",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/01-rag-context.html#navigation",
+    "href": "03-contextualizing-llms/01-rag-context.html#navigation",
+    "title": "8  RAG and Context Engineering",
+    "section": "9.11 Navigation",
+    "text": "9.11 Navigation\nPrevious: LLM APIs ←\nNext: LLM Showcase →",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>RAG and Context Engineering</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html",
+    "href": "03-contextualizing-llms/02-llm-showcase.html",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "",
+    "text": "10 LLM Showcase and Interface Design",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#learning-objectives",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#learning-objectives",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.1 Learning Objectives",
+    "text": "10.1 Learning Objectives\nBy the end of this chapter, you will be able to: - Understand principles of good UI design for AI applications - Create user-friendly interfaces for LLM applications - Build complete applications with Gradio - Present and showcase LLM projects effectively - Design interfaces that build trust and usability",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#introduction",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#introduction",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.2 Introduction",
+    "text": "10.2 Introduction\nThis final chapter focuses on creating complete, user-friendly applications that showcase your LLM work. You’ll learn how to build interfaces that make AI accessible to others and present your research effectively.",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#pre-chapter-learning-90-minutes",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#pre-chapter-learning-90-minutes",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.3 Pre-Chapter Learning (90 minutes)",
+    "text": "10.3 Pre-Chapter Learning (90 minutes)\n\n10.3.1 Required Materials:\n\nReading:\n\nWhat is Gradio? (Gradio Blog)\nWhy: Intro to building interfaces for ML models.\nPrinciples of Good UI Design (Nielsen Norman Group)\nWhy: Key principles for trustworthy, usable AI interfaces.\n\nVideo:\n\nBuild a Simple LLM App with Gradio (YouTube, 25 mins)\nWhy: Quick demo of interface building.\nGraphRAG (YouTube, 60 mins)\nWhy: Advanced RAG and graph-based retrieval for LLMs.",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#session-1-interface-design-principles-30-minutes",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#session-1-interface-design-principles-30-minutes",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.4 Session 1: Interface Design Principles (30 minutes)",
+    "text": "10.4 Session 1: Interface Design Principles (30 minutes)\n\n10.4.1 Why Interface Design Matters for AI\nBuilding Trust - Clear, transparent interfaces - Explainable AI decisions - User control and feedback - Error handling and recovery\nUsability - Intuitive navigation - Clear instructions - Appropriate feedback - Accessibility considerations\nResearch Applications - Making AI tools accessible to participants - Creating research tools for colleagues - Sharing findings with broader audiences - Building collaborative research platforms\n\n\n10.4.2 Key Design Principles\nVisibility of System Status - Show what the AI is doing - Provide progress indicators - Display confidence scores - Explain limitations clearly\nUser Control and Freedom - Allow users to modify inputs - Provide undo/redo functionality - Enable customization options - Give users choice in outputs\nError Prevention - Validate inputs before processing - Provide helpful error messages - Suggest corrections - Prevent common mistakes\nRecognition Rather Than Recall - Use familiar terminology - Provide examples and templates - Show recent interactions - Use consistent design patterns",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#session-2-building-with-gradio-45-minutes",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#session-2-building-with-gradio-45-minutes",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.5 Session 2: Building with Gradio (45 minutes)",
+    "text": "10.5 Session 2: Building with Gradio (45 minutes)\n\n10.5.1 What is Gradio?\nGradio is a Python library that makes it easy to create web interfaces for machine learning models. It’s perfect for creating demos and prototypes of AI applications.\n\n\n10.5.2 Basic Gradio Interface\nimport gradio as gr\n\ndef analyze_text(text):\n    # Your LLM analysis function\n    result = llm_analyze(text)\n    return result\n\n# Create interface\niface = gr.Interface(\n    fn=analyze_text,\n    inputs=gr.Textbox(label=\"Enter your text\"),\n    outputs=gr.Textbox(label=\"Analysis result\"),\n    title=\"Text Analysis Tool\",\n    description=\"Analyze text using AI\"\n)\n\niface.launch()\n\n\n10.5.3 Advanced Gradio Features\nMultiple Inputs and Outputs\ndef research_analyzer(text, analysis_type, confidence_threshold):\n    # Process multiple inputs\n    result = analyze_with_parameters(text, analysis_type, confidence_threshold)\n    return result, confidence_score, suggestions\n\niface = gr.Interface(\n    fn=research_analyzer,\n    inputs=[\n        gr.Textbox(label=\"Research text\"),\n        gr.Dropdown(choices=[\"themes\", \"sentiment\", \"topics\"], label=\"Analysis type\"),\n        gr.Slider(minimum=0, maximum=1, label=\"Confidence threshold\")\n    ],\n    outputs=[\n        gr.Textbox(label=\"Analysis\"),\n        gr.Number(label=\"Confidence\"),\n        gr.Textbox(label=\"Suggestions\")\n    ]\n)\nFile Upload and Processing\ndef process_survey_file(file):\n    # Process uploaded survey data\n    results = analyze_survey_data(file.name)\n    return results\n\niface = gr.Interface(\n    fn=process_survey_file,\n    inputs=gr.File(label=\"Upload survey responses\"),\n    outputs=gr.JSON(label=\"Analysis results\")\n)",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#session-3-research-application-examples-45-minutes",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#session-3-research-application-examples-45-minutes",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.6 Session 3: Research Application Examples (45 minutes)",
+    "text": "10.6 Session 3: Research Application Examples (45 minutes)\n\n10.6.1 Example 1: Survey Analysis Tool\nPurpose: Help researchers analyze open-ended survey responses\nFeatures: - Upload CSV files with responses - Choose analysis type (themes, sentiment, topics) - View results with confidence scores - Export analysis results\nInterface Design: - Clear file upload area - Dropdown for analysis options - Progress indicator during processing - Results displayed in organized format\n\n\n10.6.2 Example 2: Literature Review Assistant\nPurpose: Help researchers analyze and synthesize research papers\nFeatures: - Upload PDF papers - Extract key findings and themes - Identify research gaps - Generate synthesis summaries\nInterface Design: - Drag-and-drop file upload - Multiple analysis options - Side-by-side comparison view - Export capabilities\n\n\n10.6.3 Example 3: Interview Analysis Tool\nPurpose: Process and analyze interview transcripts\nFeatures: - Upload interview transcripts - Identify key themes and quotes - Generate coding suggestions - Create summary reports\nInterface Design: - Text input for transcripts - Real-time analysis - Interactive theme exploration - Export functionality",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#session-4-best-practices-for-ai-interfaces-30-minutes",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#session-4-best-practices-for-ai-interfaces-30-minutes",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.7 Session 4: Best Practices for AI Interfaces (30 minutes)",
+    "text": "10.7 Session 4: Best Practices for AI Interfaces (30 minutes)\n\n10.7.1 Transparency and Explainability\nShow the Process - Display what the AI is doing - Explain how decisions are made - Show confidence levels - Provide alternative interpretations\nClear Limitations - State what the AI cannot do - Explain training data limitations - Show potential biases - Provide disclaimers\n\n\n10.7.2 User Experience Considerations\nLoading States - Show progress indicators - Explain what’s happening - Provide estimated completion times - Allow cancellation if needed\nError Handling - Provide clear error messages - Suggest solutions - Offer alternative approaches - Maintain user data\nAccessibility - Use clear, readable fonts - Provide keyboard navigation - Include screen reader support - Consider color blindness\n\n\n10.7.3 Research-Specific Considerations\nData Privacy - Explain data handling - Provide privacy controls - Secure data transmission - Clear data retention policies\nAcademic Standards - Cite sources and methods - Provide reproducibility information - Include limitations and caveats - Enable peer review",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#implementation-guide",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#implementation-guide",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.8 Implementation Guide",
+    "text": "10.8 Implementation Guide\n\n10.8.1 Step 1: Define Your Application\nIdentify Purpose - What research problem does it solve? - Who are the target users? - What are the key features needed? - How will it be used?\nPlan the Interface - Sketch the user flow - Identify input and output requirements - Consider user experience - Plan for scalability\n\n\n10.8.2 Step 2: Build the Backend\nCore Functionality - Implement LLM integration - Add data processing - Include error handling - Test thoroughly\nAPI Design - Define clear interfaces - Include proper error handling - Add logging and monitoring - Consider performance\n\n\n10.8.3 Step 3: Create the Interface\nGradio Setup - Install and configure Gradio - Create basic interface - Add input/output components - Test functionality\nUser Experience - Add helpful descriptions - Include examples - Provide clear instructions - Test with users\n\n\n10.8.4 Step 4: Deploy and Share\nDeployment Options - Gradio Spaces (free hosting) - Hugging Face Spaces - Local deployment - Cloud platforms\nDocumentation - Clear usage instructions - API documentation - Research methodology - Limitations and caveats",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#connection-to-research",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#connection-to-research",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.9 Connection to Research",
+    "text": "10.9 Connection to Research\n\n10.9.1 When to Build Interfaces\nResearch Collaboration - Share tools with colleagues - Enable collaborative analysis - Standardize research processes - Facilitate peer review\nPublic Engagement - Make research accessible - Engage with broader audiences - Demonstrate research impact - Enable public participation\nEducational Purposes - Teach research methods - Demonstrate AI capabilities - Provide hands-on learning - Support student research\n\n\n10.9.2 Best Practices for Research Interfaces\nTransparency - Document all methods - Explain AI limitations - Provide source citations - Include disclaimers\nReproducibility - Share code and data - Document parameters - Provide version information - Enable independent verification\nEthics - Consider privacy implications - Address potential biases - Ensure informed consent - Protect participant data",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "03-contextualizing-llms/02-llm-showcase.html#navigation",
+    "href": "03-contextualizing-llms/02-llm-showcase.html#navigation",
+    "title": "9  LLM Showcase and Interface Design",
+    "section": "10.10 Navigation",
+    "text": "10.10 Navigation\nPrevious: RAG and Context ←\nNext: Course Conclusion →",
+    "crumbs": [
+      "Contextualizing LLMs",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>LLM Showcase and Interface Design</span>"
+    ]
+  },
+  {
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "References",
+    "section": "",
+    "text": "References\nAbadi, Martín, Paul Barham, Jianmin Chen, Zhifeng Chen, Andy Davis, Jeffrey Dean, Matthieu Devin, et al. 2016. “Tensorflow: Large-scale machine learning on heterogeneous distributed systems.” arXiv preprint arXiv:1603.04467.\nBender, Emily M, Timnit Gebru, Angelina McMillan-Major, and Shmargaret Shmitchell. 2021. “On the dangers of stochastic parrots: Can language models be too big?” Proceedings of the 2021 ACM conference on fairness, accountability, and transparency, 610–623.\nBrown, Tom, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, et al. 2020. “Language models are few-shot learners.” Advances in neural information processing systems 33: 1877–1901.\nChowdhery, Aakanksha, and others. 2022. “Palm: Scaling language modeling with pathways.” arXiv preprint arXiv:2204.02311.\nDevlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018. “BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding.” arXiv preprint arXiv:1810.04805.\nLewis, Mike, Yinhan Liu, Naman Goyal, Marjan Ghazvininejad, Abdelrahman Mohamed, Omer Levy, Ves Stoyanov, and Luke Zettlemoyer. 2020. “Retrieval-augmented generation for knowledge-intensive NLP tasks.” Advances in Neural Information Processing Systems 33: 9459–9474.\nLiu, Zhiheng, Xu Zhao, Jingwei Wang, and Jie Tang. 2023. “A survey on large language model based autonomous agents.” arXiv preprint arXiv:2308.11432.\nTouvron, Hugo, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. 2023. “Llama: Open and efficient foundation language models.” arXiv preprint arXiv:2302.13971.\nVaswani, Ashish, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. “Attention is all you need.” Advances in neural information processing systems 30.\nWang, Hongru, and others. 2023. “A survey of large language model based autonomous agents: Architectures, capabilities, and challenges.” arXiv preprint arXiv:2308.11432.\nZhang, Wayne, and others. 2023. “A survey of large language models.” arXiv preprint arXiv:2303.18223.\nZhang, Zhiheng, and others. 2023. “A comprehensive survey on large language model based autonomous agents.” arXiv preprint arXiv:2308.11432.",
+    "crumbs": [
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>References</span>"
+    ]
+  }
+]

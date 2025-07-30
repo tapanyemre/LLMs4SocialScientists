@@ -37,4 +37,5 @@ Desktop.ini
 .vscode/
 .idea/
 *.swp
-*.swo 
+*.swo
+/.quarto/
