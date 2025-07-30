@@ -51,6 +51,7 @@ format:
     fig-cap-location: bottom
     css: styles.css
     logo: assets/images/bliss-logo.png
+    include-before-body: _includes/google-analytics.html
   pdf:
     documentclass: scrreprt
     papersize: a4
