@@ -289,7 +289,7 @@ p.caption {
   line-height: 1.4;
 }
 
-/* TOC Actions Styling - inspired by Modern Polars */
+/* TOC Actions Styling - minimal like screenshot */
 .toc-actions {
   margin-top: 1rem;
   padding-top: 1rem;
@@ -313,66 +313,26 @@ p.caption {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  color: #495057;
+  padding: 0.25rem 0;
+  color: #6c757d;
   text-decoration: none;
   font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-weight: 400;
+  transition: color 0.2s ease;
   font-family: "Karla", sans-serif;
 }
 
 .toc-action:hover {
-  background-color: #3498db;
-  border-color: #3498db;
-  color: white;
+  color: #495057;
   text-decoration: none;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
 }
 
 .toc-action i {
   font-size: 0.9rem;
+  color: #6c757d;
 }
 
-/* Specific styling for different action types */
-.toc-action[href*="edit"] {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.toc-action[href*="edit"]:hover {
-  background-color: #28a745;
-  border-color: #28a745;
-  color: white;
-}
-
-.toc-action[href*="issues"] {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-
-.toc-action[href*="issues"]:hover {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: white;
-}
-
-.toc-action[href*="blob"] {
-  border-color: #6f42c1;
-  color: #6f42c1;
-}
-
-.toc-action[href*="blob"]:hover {
-  background-color: #6f42c1;
-  border-color: #6f42c1;
-  color: white;
-}
-
-/* Repo Actions Styling - inspired by Modern Polars */
+/* Repo Actions Styling - minimal like screenshot */
 .quarto-title-meta-heading {
   font-family: "Darker Grotesque", sans-serif;
   font-weight: 600;
@@ -389,59 +349,18 @@ p.caption {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  margin: 0.25rem 0.5rem 0.25rem 0;
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  color: #495057;
+  padding: 0.25rem 0;
+  margin: 0.25rem 0;
+  color: #6c757d;
   text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 400;
+  transition: color 0.2s ease;
 }
 
 .quarto-title-meta-contents a:hover {
-  background-color: #3498db;
-  border-color: #3498db;
-  color: white;
+  color: #495057;
   text-decoration: none;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
-}
-
-/* Specific styling for different action types */
-.quarto-title-meta-contents a[href*="edit"] {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.quarto-title-meta-contents a[href*="edit"]:hover {
-  background-color: #28a745;
-  border-color: #28a745;
-  color: white;
-}
-
-.quarto-title-meta-contents a[href*="issues"] {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-
-.quarto-title-meta-contents a[href*="issues"]:hover {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: white;
-}
-
-.quarto-title-meta-contents a[href*="blob"] {
-  border-color: #6f42c1;
-  color: #6f42c1;
-}
-
-.quarto-title-meta-contents a[href*="blob"]:hover {
-  background-color: #6f42c1;
-  border-color: #6f42c1;
-  color: white;
 }
 
 /* Responsive design for comments and report issue */
