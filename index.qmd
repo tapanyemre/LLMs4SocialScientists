@@ -48,6 +48,12 @@ Each chapter builds upon the previous one, ensuring you have a solid foundation 
 
 The **Boston LLMs Initiative for Social Scientists (BLISS)** organizes funded workshop series teaching social science researchers how to use large language models in their work, while discussing limitations and biases. Visit [yemretapan.com/bliss](https://yemretapan.com/bliss) for upcoming events and workshops.
 
+## License
+
+This work is licensed under CC BY-NC 4.0: "This license requires that reusers give credit to the creator. It allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, for noncommercial purposes only."
+
+The code in this book is also available under the MIT license. Under the MIT license, you are free to use the code in your own work, so long as you cite the source.
+
 ---
 
 *This book is a living document that will be updated as the field evolves. We welcome feedback and contributions from the research community.*

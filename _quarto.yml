@@ -8,12 +8,12 @@ book:
   author: "Yunus Emre Tapan"
   date: today
   repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
-  repo-actions: [edit, issue, source]
+  repo-actions: [edit, issue]
   comments:
     giscus:
       repo: tapanyemre/LLMs4SocialScientists
-      repo-id: R_kgDOLhXqXQ
-      category: Discussions
+      repo-id: "1029154030"
+      category: General
       category-id: DIC_kwDOLhXqXQc4CbqE
       mapping: pathname
       reactions-enabled: true
