@@ -1,0 +1,57 @@
+---
+title: "LLMs for Social Scientists"
+subtitle: "A Progressive Journey from Fundamentals to Advanced Applications"
+number-sections: false
+---
+
+# Preface {.unnumbered}
+
+## About This Book
+
+This book represents the collective knowledge from the **Boston LLMs Initiative for Social Scientists (BLISS)** workshop series. Our mission is to make Large Language Models accessible and useful for social science researchers, while fostering critical discussions about their limitations and biases.
+
+## Why This Book Exists
+
+Large Language Models are transforming how we conduct research, analyze text, and interact with data. However, many social science researchers find these tools intimidating or inaccessible. This book bridges that gap by providing:
+
+- **Progressive learning** from fundamentals to advanced applications
+- **Social science focus** with research-relevant examples
+- **Hands-on practice** with real-world applications
+- **Critical perspective** on limitations and ethical considerations
+
+## Who This Book Is For
+
+This book is designed for social science researchers who want to understand and apply LLMs to their research workflows. Whether you're a graduate student, faculty member, or research professional, this book provides the foundation you need to confidently use LLMs in your work.
+
+## How This Book Is Organized
+
+The book follows a progressive structure:
+
+**Getting Started**: Foundation and preparation
+**Fundamentals**: Understanding how LLMs work
+**LLMs in Action**: Practical applications and APIs
+**Contextualizing LLMs**: Advanced techniques and complete applications
+
+Each chapter builds upon the previous one, ensuring you have a solid foundation before moving to more advanced topics.
+
+## Prerequisites
+
+- Basic familiarity with Python (we'll provide refreshers)
+- Willingness to work through mathematical concepts step-by-step
+- Interest in applying AI to social science research
+
+## About the Author
+
+**Yunus Emre Tapan** is the founder of BLISS and a researcher focused on making AI tools accessible to social scientists.
+
+## About BLISS
+
+The **Boston LLMs Initiative for Social Scientists (BLISS)** organizes funded workshop series teaching social science researchers how to use large language models in their work, while discussing limitations and biases. Visit [yemretapan.com/bliss](https://yemretapan.com/bliss) for upcoming events and workshops.
+
+---
+
+*This book is a living document that will be updated as the field evolves. We welcome feedback and contributions from the research community.*
+
+## Navigation
+
+**Next:** [Chapter 1: Getting Started →](00-getting-started/01-course-overview.qmd) 

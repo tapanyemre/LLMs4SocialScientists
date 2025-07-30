@@ -1,0 +1,228 @@
+---
+title: "LLM Capabilities and Limitations"
+chapter: true
+---
+
+# LLM Capabilities and Limitations
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand the capabilities and limitations of modern LLMs
+- Use Hugging Face to explore different models
+- Recognize when LLMs are appropriate for research tasks
+- Identify potential biases and limitations in LLM outputs
+- Apply LLMs to basic text analysis tasks
+
+## Introduction
+
+This chapter introduces you to real Large Language Models through hands-on exploration. You'll learn what LLMs can and cannot do, and how to use them responsibly in your research.
+
+## Pre-Chapter Learning (30 minutes)
+
+### Materials:
+1. **Hugging Face Introduction** (15 minutes)
+   - [Hugging Face Course](https://huggingface.co/course) - Introduction to the platform
+   - [Model Hub Overview](https://huggingface.co/models) - Understanding available models
+
+2. **LLM Capabilities Overview** (15 minutes)
+   - [What Can Language Models Do?](https://arxiv.org/abs/2007.14062) - Research paper on capabilities
+   - [Limitations of Language Models](https://arxiv.org/abs/2002.08910) - Understanding limitations
+
+## Session 1: Exploring LLM Capabilities (45 minutes)
+
+### What LLMs Can Do
+
+**Text Generation**
+- Complete sentences and paragraphs
+- Generate creative content
+- Answer questions based on training data
+- Translate between languages
+
+**Text Classification**
+- Categorize documents by topic
+- Identify sentiment in text
+- Detect spam or inappropriate content
+- Classify research papers by field
+
+**Question Answering**
+- Answer factual questions
+- Provide explanations
+- Generate summaries
+- Extract information from text
+
+**Code Generation**
+- Write simple code snippets
+- Debug existing code
+- Explain code functionality
+- Generate documentation
+
+### Hands-On Exercise: Model Exploration
+
+```python
+# Example: Exploring different models
+from transformers import pipeline
+
+# Text classification
+classifier = pipeline("text-classification")
+result = classifier("I love this research paper!")
+print(result)
+
+# Question answering
+qa = pipeline("question-answering")
+context = "The study found that social media use is associated with increased anxiety."
+question = "What did the study find?"
+answer = qa(question=question, context=context)
+print(answer)
+```
+
+## Session 2: Understanding LLM Limitations (45 minutes)
+
+### What LLMs Cannot Do
+
+**Factual Accuracy**
+- May generate incorrect information
+- Cannot access real-time data
+- Limited to training data cutoff
+- May "hallucinate" plausible but false information
+
+**Reasoning and Logic**
+- Struggle with complex reasoning
+- May make logical errors
+- Limited mathematical capabilities
+- Cannot perform true understanding
+
+**Bias and Fairness**
+- Reflect biases in training data
+- May perpetuate stereotypes
+- Can amplify existing inequalities
+- Requires careful evaluation
+
+**Context Understanding**
+- Limited context window
+- May miss nuanced meaning
+- Can be sensitive to prompt wording
+- May not understand domain-specific knowledge
+
+### Exercise: Identifying Limitations
+
+**Task**: Analyze LLM outputs for potential issues
+- Test factual accuracy with known information
+- Evaluate bias in responses
+- Check for logical consistency
+- Assess domain knowledge limitations
+
+## Session 3: Practical Applications for Research (30 minutes)
+
+### Research Use Cases
+
+**Literature Review**
+- Summarize research papers
+- Identify key themes and findings
+- Generate research questions
+- Create annotated bibliographies
+
+**Survey Analysis**
+- Code open-ended responses
+- Identify common themes
+- Generate follow-up questions
+- Analyze sentiment in responses
+
+**Content Generation**
+- Draft research summaries
+- Create presentation outlines
+- Generate grant proposal sections
+- Write accessible explanations
+
+**Data Preprocessing**
+- Clean and standardize text data
+- Remove irrelevant content
+- Identify and handle missing data
+- Prepare data for analysis
+
+### Exercise: Research Application
+
+```python
+# Example: Analyzing survey responses
+responses = [
+    "I feel overwhelmed by social media pressure",
+    "Social media helps me stay connected",
+    "I spend too much time on my phone"
+]
+
+# Use LLM to identify themes
+for response in responses:
+    # Analyze sentiment and themes
+    # Generate coding categories
+    # Identify key concepts
+    pass
+```
+
+## Ethical Considerations
+
+### Responsible Use Guidelines
+
+**Transparency**
+- Document all LLM usage in methods
+- Disclose when AI tools are used
+- Be clear about limitations
+- Share prompts and parameters
+
+**Evaluation**
+- Always verify LLM outputs
+- Cross-check with reliable sources
+- Consider multiple perspectives
+- Acknowledge potential biases
+
+**Privacy**
+- Don't share sensitive data with LLMs
+- Be careful with participant information
+- Consider data retention policies
+- Protect confidential information
+
+**Fairness**
+- Evaluate outputs for bias
+- Consider diverse perspectives
+- Test with different populations
+- Acknowledge limitations
+
+## Connection to Research
+
+### When to Use LLMs
+
+**Appropriate Uses**
+- Initial exploration of large datasets
+- Generating research hypotheses
+- Creating draft content
+- Automating routine tasks
+
+**Inappropriate Uses**
+- Making final research decisions
+- Replacing human judgment
+- Analyzing sensitive data
+- Generating definitive conclusions
+
+### Best Practices
+
+**For Literature Reviews**
+- Use LLMs to identify themes and patterns
+- Always verify key findings manually
+- Cross-reference with original sources
+- Maintain critical perspective
+
+**For Survey Analysis**
+- Use LLMs for initial coding
+- Verify coding with human review
+- Consider multiple coding approaches
+- Document coding decisions
+
+**For Content Generation**
+- Use LLMs for drafting and brainstorming
+- Always edit and review generated content
+- Maintain your voice and perspective
+- Ensure accuracy and appropriateness
+
+## Navigation
+
+**Previous:** [Transformers and Embeddings ←](../01-fundamentals/02-transformers.qmd)  
+**Next:** [LLM APIs →](02-llm-apis.qmd) 

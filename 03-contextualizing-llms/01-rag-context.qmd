@@ -1,0 +1,332 @@
+---
+title: "RAG and Context Engineering"
+chapter: true
+---
+
+# RAG and Context Engineering
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand the difference between Plain LLM, RAG, and GraphRAG approaches
+- Learn how vector databases enable semantic search
+- Build and interpret simple knowledge graphs
+- Practice model selection and fallback for robust AI research
+- Compare and reflect on the strengths of each approach for research
+
+## Introduction
+
+This chapter explores advanced techniques for providing context to Large Language Models. You'll learn about Retrieval-Augmented Generation (RAG), knowledge graphs, and how to combine them for more accurate and contextual AI responses.
+
+## Pre-Chapter Learning (30 minutes)
+
+### Materials:
+1. **Vector Databases Foundation** (15 minutes)
+   - [What is a Vector Database? (Pinecone)](https://www.pinecone.io/learn/vector-database/) - Industry overview
+   - [What is a Knowledge Graph? (YouTube)](https://www.youtube.com/watch?v=y7sXDpffzQQ) - Visual intro
+
+2. **RAG Concepts** (15 minutes)
+   - [RAG vs. GraphRAG (YouTube)](https://www.youtube.com/watch?v=Aw7iQjKAX2k) - Quick comparison
+   - Preview the hands-on exercises
+
+## Session 1: Understanding RAG (40 minutes)
+
+### What is Retrieval-Augmented Generation?
+
+**RAG** combines the power of Large Language Models with external knowledge sources. Instead of relying solely on the model's training data, RAG retrieves relevant information and provides it as context to the LLM.
+
+### How RAG Works
+
+1. **Query Processing**: Convert user question into search terms
+2. **Retrieval**: Search external knowledge base for relevant documents
+3. **Context Injection**: Provide retrieved documents to LLM
+4. **Generation**: LLM generates answer using provided context
+
+### Example: Philosophy Research
+
+```python
+# Example: Researching philosophical concepts
+query = "What did Kant say about moral duty?"
+
+# RAG Process:
+# 1. Search philosophy papers for Kant + moral duty
+# 2. Retrieve relevant passages
+# 3. Provide context to LLM
+# 4. Generate answer based on retrieved information
+```
+
+### Advantages of RAG
+
+**Accuracy**
+- Based on specific, relevant information
+- Reduces hallucination
+- More up-to-date than training data
+
+**Transparency**
+- Can cite sources
+- Traceable to original documents
+- Verifiable information
+
+**Flexibility**
+- Can use any knowledge base
+- Adaptable to different domains
+- Easy to update with new information
+
+## Session 2: Vector Databases and Semantic Search (35 minutes)
+
+### Understanding Vector Embeddings
+
+**Vector embeddings** represent text as numerical vectors that capture meaning and relationships.
+
+### Semantic Search Process
+
+1. **Document Embedding**: Convert documents to vectors
+2. **Query Embedding**: Convert search query to vector
+3. **Similarity Calculation**: Find most similar document vectors
+4. **Retrieval**: Return most relevant documents
+
+### Example: Research Paper Search
+
+```python
+# Example: Finding relevant research papers
+query = "social media effects on mental health"
+
+# Vector search finds papers about:
+# - Social media and depression
+# - Instagram and anxiety
+# - Facebook and well-being
+# - Digital technology and psychology
+```
+
+### Vector Database Applications
+
+**Literature Review**
+- Find related research papers
+- Identify research gaps
+- Discover emerging themes
+
+**Survey Analysis**
+- Group similar responses
+- Identify common themes
+- Find representative examples
+
+**Content Recommendation**
+- Suggest related articles
+- Find similar research questions
+- Recommend follow-up studies
+
+## Session 3: Knowledge Graphs (30 minutes)
+
+### What are Knowledge Graphs?
+
+**Knowledge graphs** represent information as networks of connected entities and relationships. They capture not just individual facts, but the relationships between them.
+
+### Knowledge Graph Structure
+
+**Entities**: People, places, concepts, events
+**Relationships**: Connections between entities
+**Properties**: Attributes of entities
+
+### Example: Research Domain Knowledge Graph
+
+```
+Entities:
+- Social Media (concept)
+- Mental Health (concept)
+- Instagram (platform)
+- Depression (condition)
+
+Relationships:
+- Instagram -> affects -> Mental Health
+- Social Media -> includes -> Instagram
+- Depression -> is_a -> Mental Health condition
+- Instagram -> associated_with -> Depression
+```
+
+### Building Knowledge Graphs
+
+**Manual Construction**
+- Define entities and relationships
+- Create structured data
+- Validate connections
+
+**Automated Extraction**
+- Use NLP to extract entities
+- Identify relationships from text
+- Validate with human review
+
+**Hybrid Approaches**
+- Start with manual structure
+- Automate extraction for scale
+- Human validation for quality
+
+## Session 4: GraphRAG - Combining Approaches (25 minutes)
+
+### What is GraphRAG?
+
+**GraphRAG** combines traditional RAG with knowledge graph information to provide richer context and better understanding of relationships.
+
+### GraphRAG Process
+
+1. **Traditional RAG**: Retrieve relevant documents
+2. **Graph Enhancement**: Add knowledge graph information
+3. **Relationship Analysis**: Identify connections between concepts
+4. **Enhanced Context**: Provide both documents and graph information to LLM
+
+### Example: Philosophy Research with GraphRAG
+
+```python
+# Research question: "How do different philosophers view free will?"
+
+# Traditional RAG finds:
+# - Papers about Kant and free will
+# - Papers about Hume and determinism
+# - Papers about contemporary views
+
+# GraphRAG also finds:
+# - Connections between Kant and Hume
+# - Historical development of ideas
+# - Related concepts (causality, responsibility)
+# - Influence relationships between philosophers
+```
+
+### Advantages of GraphRAG
+
+**Richer Context**
+- Documents + relationships
+- Historical development
+- Influence networks
+- Related concepts
+
+**Better Understanding**
+- Contextual relationships
+- Temporal development
+- Influence patterns
+- Conceptual connections
+
+**More Comprehensive Answers**
+- Multiple perspectives
+- Historical context
+- Related concepts
+- Influence networks
+
+## Practical Applications for Research
+
+### Literature Review Enhancement
+
+**Traditional Approach**
+- Read papers individually
+- Manual synthesis
+- Limited to direct citations
+
+**GraphRAG Approach**
+- Automated paper discovery
+- Relationship identification
+- Comprehensive synthesis
+- Influence network analysis
+
+### Survey Analysis
+
+**Traditional Approach**
+- Manual coding
+- Limited to direct responses
+- Time-consuming analysis
+
+**GraphRAG Approach**
+- Automated theme identification
+- Relationship discovery
+- Comprehensive analysis
+- Pattern recognition
+
+### Research Planning
+
+**Traditional Approach**
+- Manual literature review
+- Limited scope
+- Time-intensive
+
+**GraphRAG Approach**
+- Automated gap identification
+- Comprehensive coverage
+- Relationship discovery
+- Efficient planning
+
+## Implementation Considerations
+
+### Technical Requirements
+
+**Vector Database**
+- Pinecone, Weaviate, or similar
+- Storage for document embeddings
+- Search capabilities
+
+**Knowledge Graph**
+- Neo4j, ArangoDB, or similar
+- Graph query capabilities
+- Relationship management
+
+**Integration**
+- API connections
+- Data synchronization
+- Response generation
+
+### Best Practices
+
+**Data Quality**
+- Clean, structured documents
+- Validated relationships
+- Regular updates
+
+**Performance**
+- Efficient search algorithms
+- Caching strategies
+- Scalable architecture
+
+**Evaluation**
+- Accuracy metrics
+- Relevance assessment
+- Human validation
+
+## Connection to Research
+
+### When to Use Each Approach
+
+**Plain LLM**
+- General questions
+- Creative tasks
+- Quick responses
+- Limited context needs
+
+**RAG**
+- Factual questions
+- Domain-specific queries
+- Source citation needs
+- Up-to-date information
+
+**GraphRAG**
+- Complex research questions
+- Relationship analysis
+- Historical development
+- Comprehensive understanding
+
+### Research Workflow Integration
+
+**Planning Phase**
+- Use GraphRAG for comprehensive literature review
+- Identify research gaps and relationships
+- Plan methodology based on existing work
+
+**Analysis Phase**
+- Use RAG for specific fact-checking
+- Apply GraphRAG for relationship analysis
+- Combine approaches for comprehensive understanding
+
+**Writing Phase**
+- Use RAG for source citation
+- Apply GraphRAG for context development
+- Ensure comprehensive coverage
+
+## Navigation
+
+**Previous:** [LLM APIs ←](../02-llms-in-action/02-llm-apis.qmd)  
+**Next:** [LLM Showcase →](02-llm-showcase.qmd) 

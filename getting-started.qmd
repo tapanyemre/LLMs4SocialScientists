@@ -1,0 +1,7 @@
+---
+title: "Getting Started"
+---
+
+# Getting Started
+
+This section provides the foundation for your journey into Large Language Models. You'll learn about the course structure, set up your technical environment, develop effective learning strategies, and understand how LLMs can be applied to social science research.

@@ -1,0 +1,31 @@
+---
+title: "References"
+chapter: true
+number-sections: false
+---
+
+# References {.unnumbered}
+
+Abadi, Martín, Paul Barham, Jianmin Chen, Zhifeng Chen, Andy Davis, Jeffrey Dean, Matthieu Devin, et al. 2016. "Tensorflow: Large-scale machine learning on heterogeneous distributed systems." _arXiv preprint arXiv:1603.04467_.
+
+Bender, Emily M, Timnit Gebru, Angelina McMillan-Major, and Shmargaret Shmitchell. 2021. "On the dangers of stochastic parrots: Can language models be too big?" _Proceedings of the 2021 ACM conference on fairness, accountability, and transparency_, 610--623.
+
+Brown, Tom, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, et al. 2020. "Language models are few-shot learners." _Advances in neural information processing systems_ 33: 1877--1901.
+
+Chowdhery, Aakanksha, and others. 2022. "Palm: Scaling language modeling with pathways." _arXiv preprint arXiv:2204.02311_.
+
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018. "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding." _arXiv preprint arXiv:1810.04805_.
+
+Lewis, Mike, Yinhan Liu, Naman Goyal, Marjan Ghazvininejad, Abdelrahman Mohamed, Omer Levy, Ves Stoyanov, and Luke Zettlemoyer. 2020. "Retrieval-augmented generation for knowledge-intensive NLP tasks." _Advances in Neural Information Processing Systems_ 33: 9459--9474.
+
+Liu, Zhiheng, Xu Zhao, Jingwei Wang, and Jie Tang. 2023. "A survey on large language model based autonomous agents." _arXiv preprint arXiv:2308.11432_.
+
+Touvron, Hugo, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. 2023. "Llama: Open and efficient foundation language models." _arXiv preprint arXiv:2302.13971_.
+
+Vaswani, Ashish, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. "Attention is all you need." _Advances in neural information processing systems_ 30.
+
+Wang, Hongru, and others. 2023. "A survey of large language model based autonomous agents: Architectures, capabilities, and challenges." _arXiv preprint arXiv:2308.11432_.
+
+Zhang, Wayne, and others. 2023. "A survey of large language models." _arXiv preprint arXiv:2303.18223_.
+
+Zhang, Zhiheng, and others. 2023. "A comprehensive survey on large language model based autonomous agents." _arXiv preprint arXiv:2308.11432_. 

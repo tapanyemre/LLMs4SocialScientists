@@ -1,0 +1,7 @@
+---
+title: "LLMs in Action"
+---
+
+# LLMs in Action
+
+This section focuses on practical applications of Large Language Models. You'll explore LLM capabilities and limitations, work with APIs, and learn how to apply these tools to real research tasks.

@@ -1,0 +1,200 @@
+/* Custom styling for social science focus */
+body {
+  font-family: "Georgia", serif;
+  line-height: 1.6;
+}
+
+/* Highlight important concepts */
+.important {
+  background-color: #f0f8ff;
+  border-left: 4px solid #0066cc;
+  padding: 1em;
+  margin: 1em 0;
+}
+
+/* Style for research applications */
+.research-app {
+  background-color: #fff8dc;
+  border: 1px solid #daa520;
+  border-radius: 5px;
+  padding: 1em;
+  margin: 1em 0;
+}
+
+/* Code block styling */
+.sourceCode {
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+/* Navigation styling */
+.nav-pills .nav-link.active {
+  background-color: #0066cc;
+}
+
+/* Chapter headers */
+h1 {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5em;
+}
+
+/* Section headers */
+h2 {
+  color: #34495e;
+  margin-top: 2em;
+}
+
+/* Subsection headers */
+h3 {
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* Links */
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #3498db;
+  margin: 1em 0;
+  padding-left: 1em;
+  font-style: italic;
+  color: #555;
+}
+
+/* Code blocks */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 1em;
+  overflow-x: auto;
+}
+
+code {
+  background-color: #f8f9fa;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: "Courier New", monospace;
+}
+
+/* Learning objectives box */
+.learning-objectives {
+  background-color: #e8f4fd;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  padding: 1.5em;
+  margin: 1.5em 0;
+}
+
+.learning-objectives h3 {
+  color: #2980b9;
+  margin-top: 0;
+}
+
+/* Exercise boxes */
+.exercise {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5em;
+  margin: 1.5em 0;
+}
+
+.exercise h4 {
+  color: #856404;
+  margin-top: 0;
+}
+
+/* Warning boxes */
+.warning {
+  background-color: #f8d7da;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  padding: 1.5em;
+  margin: 1.5em 0;
+}
+
+.warning h4 {
+  color: #721c24;
+  margin-top: 0;
+}
+
+/* Success boxes */
+.success {
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  padding: 1.5em;
+  margin: 1.5em 0;
+}
+
+.success h4 {
+  color: #155724;
+  margin-top: 0;
+}
+
+/* Navigation arrows */
+.nav-arrows {
+  display: flex;
+  justify-content: space-between;
+  margin: 2em 0;
+  padding: 1em 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.nav-arrows a {
+  padding: 0.5em 1em;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.nav-arrows a:hover {
+  background-color: #e9ecef;
+  text-decoration: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  .nav-arrows {
+    flex-direction: column;
+    gap: 1em;
+  }
+  
+  table {
+    font-size: 14px;
+  }
+} 

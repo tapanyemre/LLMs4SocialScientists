@@ -1,0 +1,69 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "LLMs for Social Scientists"
+  subtitle: "A Progressive Journey from Fundamentals to Advanced Applications"
+  author: "Yunus Emre Tapan"
+  date: today
+  chapters:
+    - index.qmd
+    - part: getting-started.qmd
+      chapters:
+        - 00-getting-started/01-course-overview.qmd
+        - 00-getting-started/02-setup-and-strategies.qmd
+    - part: fundamentals.qmd
+      chapters:
+        - 01-fundamentals/01-neural-networks.qmd
+        - 01-fundamentals/02-transformers.qmd
+    - part: llms-in-action.qmd
+      chapters:
+        - 02-llms-in-action/01-llm-capabilities.qmd
+        - 02-llms-in-action/02-llm-apis.qmd
+    - part: contextualizing-llms.qmd
+      chapters:
+        - 03-contextualizing-llms/01-rag-context.qmd
+        - 03-contextualizing-llms/02-llm-showcase.qmd
+    - references.qmd
+
+format:
+  html:
+    theme: default
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    fig-cap-location: bottom
+    css: styles.css
+    logo: assets/images/bliss-logo.png
+    repo-url: https://github.com/your-username/BLISS-Learning
+    repo-actions: [edit, issue]
+  pdf:
+    documentclass: scrreprt
+    papersize: a4
+    fontsize: 11pt
+    geometry:
+      - top=30mm
+      - left=20mm
+      - heightrounded
+    colorlinks: true
+    linkcolor: blue
+    urlcolor: blue
+    toc: true
+    number-sections: true
+
+execute:
+  echo: true
+  eval: false
+  warning: false
+  error: false
+
+bibliography: references.bib
+
+editor_options:
+  markdown:
+    wrap: sentence
+    canonical: true

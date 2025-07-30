@@ -1,0 +1,291 @@
+---
+title: "Working with LLM APIs"
+chapter: true
+---
+
+# Working with LLM APIs
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand how to interact with LLM APIs
+- Use prompt engineering techniques effectively
+- Handle API responses and errors
+- Apply LLMs to real research tasks
+- Implement best practices for API usage
+
+## Introduction
+
+This chapter teaches you how to work with Large Language Model APIs, including prompt engineering, response handling, and practical applications for research. You'll learn to communicate effectively with AI systems and get the most out of their capabilities.
+
+## Pre-Chapter Learning (30 minutes)
+
+### Materials:
+1. **API Basics** (15 minutes)
+   - [What are APIs?](https://www.howtogeek.com/343877/what-is-an-api/) - Introduction to APIs
+   - [REST API Tutorial](https://restfulapi.net/) - Understanding API communication
+
+2. **Prompt Engineering** (15 minutes)
+   - [Prompt Engineering Guide](https://www.promptingguide.ai/) - Best practices for prompts
+   - [OpenAI API Documentation](https://platform.openai.com/docs) - Technical reference
+
+## Session 1: Understanding APIs (30 minutes)
+
+### What are APIs?
+
+**Application Programming Interfaces (APIs)** are ways for different software systems to communicate with each other. In the context of LLMs, APIs allow you to send text to an AI model and receive responses.
+
+### Key Concepts
+
+**HTTP Requests**
+- **GET**: Retrieve information
+- **POST**: Send data to the server
+- **PUT/PATCH**: Update existing data
+- **DELETE**: Remove data
+
+**API Endpoints**
+- Specific URLs that accept requests
+- Different endpoints for different functions
+- Authentication required for most services
+
+**Response Formats**
+- JSON (JavaScript Object Notation) is most common
+- Structured data that's easy to parse
+- Contains the AI's response and metadata
+
+### Example API Call
+
+```python
+import requests
+
+# Example API call structure
+url = "https://api.openai.com/v1/chat/completions"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+data = {
+    "model": "gpt-3.5-turbo",
+    "messages": [
+        {"role": "user", "content": "Hello, how are you?"}
+    ]
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+print(result['choices'][0]['message']['content'])
+```
+
+## Session 2: Prompt Engineering (45 minutes)
+
+### What is Prompt Engineering?
+
+**Prompt engineering** is the practice of designing inputs to AI systems to get the best possible outputs. It's like learning to speak the AI's language effectively.
+
+### Basic Prompting Techniques
+
+**Clear Instructions**
+```
+❌ Bad: "Tell me about social media"
+✅ Good: "Provide a 3-paragraph summary of the psychological effects of social media use on teenagers, focusing on anxiety and depression."
+```
+
+**Context Setting**
+```
+❌ Bad: "Analyze this text"
+✅ Good: "You are a social science researcher analyzing survey responses. Analyze the following text for themes related to mental health: [text]"
+```
+
+**Output Formatting**
+```
+❌ Bad: "List the themes"
+✅ Good: "Identify the top 3 themes in the following text and format your response as:
+1. Theme name: Brief description
+2. Theme name: Brief description
+3. Theme name: Brief description"
+```
+
+### Advanced Prompting Techniques
+
+**Few-Shot Learning**
+```
+Example 1:
+Input: "I feel stressed about work"
+Output: Theme: Work-related stress
+
+Example 2:
+Input: "My relationship is causing anxiety"
+Output: Theme: Relationship stress
+
+Now analyze: "I'm worried about my finances"
+```
+
+**Chain-of-Thought**
+```
+❌ Bad: "What's the answer?"
+✅ Good: "Let's approach this step by step:
+1. First, identify the key concepts
+2. Then, analyze their relationships
+3. Finally, draw a conclusion
+
+Question: [your question]"
+```
+
+**Role-Based Prompting**
+```
+"You are an expert social science researcher with 20 years of experience in qualitative data analysis. Your task is to..."
+```
+
+## Session 3: Practical Applications (45 minutes)
+
+### Research Applications
+
+**Literature Review Assistance**
+```python
+prompt = """
+You are a research assistant helping with a literature review on social media and mental health.
+
+Given the following research paper abstract, please:
+1. Identify the main research question
+2. List the key findings
+3. Note any limitations mentioned
+4. Suggest how this relates to other research in the field
+
+Abstract: [paper abstract]
+"""
+```
+
+**Survey Response Analysis**
+```python
+prompt = """
+You are analyzing open-ended survey responses about social media use.
+
+For each response, identify:
+1. Primary theme (e.g., addiction, connection, privacy)
+2. Sentiment (positive, negative, neutral, mixed)
+3. Key concerns or benefits mentioned
+4. Suggested follow-up questions
+
+Response: [survey response]
+"""
+```
+
+**Content Generation**
+```python
+prompt = """
+You are writing a research summary for a general audience.
+
+Please convert the following academic findings into accessible language:
+- Use simple, clear language
+- Avoid jargon
+- Include practical implications
+- Keep it under 200 words
+
+Findings: [research findings]
+"""
+```
+
+### Exercise: Building a Research Tool
+
+**Task**: Create a simple survey analysis tool
+
+```python
+def analyze_survey_response(response, api_client):
+    prompt = f"""
+    Analyze this survey response about social media use:
+    
+    Response: {response}
+    
+    Please provide:
+    1. Main theme (one word)
+    2. Sentiment (positive/negative/neutral)
+    3. Key concerns (list)
+    4. Suggested follow-up question
+    """
+    
+    # Send to API and process response
+    # Return structured analysis
+    pass
+```
+
+## Error Handling and Best Practices
+
+### Common API Errors
+
+**Rate Limiting**
+- Too many requests too quickly
+- Solution: Implement delays between requests
+- Monitor usage limits
+
+**Authentication Errors**
+- Invalid or expired API key
+- Solution: Check API key and permissions
+- Rotate keys regularly
+
+**Model Errors**
+- Model unavailable or overloaded
+- Solution: Implement retry logic
+- Have fallback models
+
+### Best Practices
+
+**Security**
+- Never share API keys in code
+- Use environment variables
+- Monitor API usage and costs
+- Implement proper error handling
+
+**Efficiency**
+- Batch requests when possible
+- Cache responses when appropriate
+- Use appropriate model sizes
+- Monitor response times
+
+**Quality**
+- Always validate responses
+- Implement human review for important outputs
+- Test with diverse inputs
+- Document prompt strategies
+
+## Connection to Research
+
+### When to Use APIs vs. Local Models
+
+**Use APIs When:**
+- You need the latest models
+- You don't have computational resources
+- You need quick prototyping
+- You want to try multiple models
+
+**Use Local Models When:**
+- You have sensitive data
+- You need consistent performance
+- You want to avoid API costs
+- You need offline capabilities
+
+### Research Workflow Integration
+
+**Planning Phase**
+- Use LLMs to generate research questions
+- Explore potential methodologies
+- Identify relevant literature
+
+**Data Collection**
+- Generate survey questions
+- Create interview protocols
+- Design coding schemes
+
+**Analysis Phase**
+- Code qualitative data
+- Identify themes and patterns
+- Generate hypotheses
+
+**Writing Phase**
+- Draft research summaries
+- Create presentation outlines
+- Generate accessible explanations
+
+## Navigation
+
+**Previous:** [LLM Capabilities ←](01-llm-capabilities.qmd)  
+**Next:** [RAG and Context →](../03-contextualizing-llms/01-rag-context.qmd) 

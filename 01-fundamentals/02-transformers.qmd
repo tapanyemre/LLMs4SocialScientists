@@ -1,0 +1,138 @@
+---
+title: "Transformers and Embeddings Fundamentals"
+chapter: true
+---
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- **Embedding Mastery:** Understand how words and concepts are represented as vectors
+- **Attention Mechanism:** Calculate self-attention by hand and understand its purpose
+- **Transformer Architecture:** Comprehend the complete transformer model structure
+- **Query-Key-Value System:** Master the fundamental attention computation framework
+
+## Introduction
+
+This chapter explores the evolution from neural networks to transformers, the architecture that powers modern Large Language Models. You'll learn how words become numbers and how attention mechanisms enable models to understand context.
+
+## Pre-Chapter Learning (2 hours)
+
+### Materials:
+1. **Vector Embeddings Foundation** (30 minutes)
+   - [Word Embeddings Explained (StatQuest)](https://www.youtube.com/watch?v=viZrOnJclY0) - 11-minute video on word representations
+   - [What are Word Embeddings? (IBM)](https://www.ibm.com/think/topics/word-embeddings) - Technical overview (15 min read)
+
+2. **Transformer Architecture** (60 minutes)
+   - [Attention Is All You Need (Paper Summary)](https://www.youtube.com/watch?v=iDulhoQ2pro) - 30-minute explanation of the original paper
+   - Deep Dive into Transformers by Hand - Detailed mathematical walkthrough (30 min read)
+
+3. **Attention Mechanisms** (30 minutes)
+   - Keys, Queries, Values Explained - Core attention concepts (15 min read)
+
+## Session 1: Vector Embeddings Deep Dive (30 minutes)
+
+### Understanding How Words Become Numbers
+
+**Key Concept**: Vector embeddings transform words into numerical representations that capture meaning and relationships.
+
+**Exercise**: Vector Embeddings Practice
+- Explore how words are represented as vectors
+- Understand similarity and distance in vector space
+- Practice with word analogies and relationships
+
+**You'll learn**: How words become numbers that preserve meaning
+
+### Vector Database Applications
+- **Similarity search**: Finding related concepts
+- **Clustering**: Grouping similar ideas
+- **Recommendation systems**: Suggesting related content
+- **Research applications**: Literature review and synthesis
+
+## Session 2: Self-Attention Mechanism by Hand (40 minutes)
+
+### The Heart of Transformer Architecture
+
+**Key Concept**: Self-attention allows positions to attend to other positions in the sequence, capturing relationships between words.
+
+**Exercise**: Self-Attention Calculation
+- Calculate attention scores step-by-step
+- Understand query, key, and value matrices
+- Practice attention computation by hand
+- Visualize attention patterns
+
+**Mathematical Foundation**:
+```
+Attention(Q,K,V) = softmax(QK^T/√d_k)V
+```
+
+### Why Attention Matters
+- **Context understanding**: Words can attend to relevant context
+- **Long-range dependencies**: Capture relationships across long sequences
+- **Interpretability**: Attention weights show what the model focuses on
+- **Flexibility**: Can attend to any position in the sequence
+
+## Session 3: Complete Transformer Architecture (25 minutes)
+
+### From Attention to Full Model
+
+**Exercise**: Transformer Architecture Walkthrough
+- Understand the complete transformer structure
+- Explore encoder and decoder components
+- Practice with a complete example
+- Connect to real-world applications
+
+### Transformer Components
+- **Input Embeddings**: Convert words to vectors
+- **Positional Encoding**: Add position information
+- **Multi-Head Attention**: Multiple attention mechanisms
+- **Feed-Forward Networks**: Process attended information
+- **Layer Normalization**: Stabilize training
+- **Residual Connections**: Help with gradient flow
+
+## Key Concepts
+
+| Concept | Description | Mathematical Foundation |
+|---------|-------------|------------------------|
+| **Vector Embeddings** | Dense numerical representations of words/concepts | Continuous vector space mapping |
+| **Self-Attention** | Mechanism allowing positions to attend to other positions | Scaled dot-product: Attention(Q,K,V) = softmax(QK^T/√d_k)V |
+| **Query, Key, Value** | Three matrices that enable attention computation | Linear projections: Q=XW_Q, K=XW_K, V=XW_V |
+
+## Connection to Research
+
+### Why Transformers Matter for Social Science
+- **Text understanding**: Better comprehension of complex documents
+- **Context awareness**: Models understand relationships between concepts
+- **Scalability**: Can process large amounts of text efficiently
+- **Interpretability**: Attention weights show what models focus on
+
+### Research Applications
+- **Document analysis**: Understanding complex research papers
+- **Survey analysis**: Processing open-ended responses
+- **Literature review**: Synthesizing multiple sources
+- **Content generation**: Creating research summaries
+
+## Advanced Topics Preview
+
+### Multi-Head Attention
+- Multiple attention mechanisms running in parallel
+- Captures different types of relationships
+- Enables richer representations
+
+### Positional Encoding
+- Adds position information to embeddings
+- Enables understanding of word order
+- Critical for sequence processing
+
+### Layer Normalization
+- Stabilizes training process
+- Improves convergence
+- Essential for deep networks
+
+## Connection to Chapter 3
+
+This chapter prepares you for Chapter 3 where you'll use pre-trained transformer models (BERT, GPT, etc.) through Hugging Face for practical NLP applications. You'll apply the theoretical understanding gained here to real-world tasks like text classification, NER, and generation.
+
+## Navigation
+
+**Previous:** [Neural Networks Fundamentals ←](01-neural-networks.qmd)  
+**Next:** [LLM Capabilities →](../02-llms-in-action/01-llm-capabilities.qmd) 

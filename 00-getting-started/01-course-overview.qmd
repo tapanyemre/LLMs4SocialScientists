@@ -1,0 +1,97 @@
+---
+title: "Course Overview"
+chapter: true
+---
+
+## Learning Philosophy
+
+This course is designed specifically for social science researchers who want to understand and use Large Language Models (LLMs) in their work. We take a progressive approach that builds from fundamental concepts to practical applications.
+
+### Why This Matters for Social Science Research
+
+LLMs are transforming how we can analyze text, conduct research, and interact with data. Understanding these tools allows you to:
+
+- **Analyze large text datasets** more efficiently
+- **Generate research hypotheses** from literature reviews
+- **Create survey instruments** and interview protocols
+- **Process qualitative data** at scale
+- **Communicate findings** more effectively
+
+## Course Structure
+
+### Chapter 1: Fundamentals of LLMs
+**Building the Foundation**
+- Neural network basics and mathematical understanding
+- Transformer architecture and attention mechanisms
+- How modern LLMs process and generate text
+
+### Chapter 2: LLMs in Action
+**Practical Applications**
+- Exploring LLM capabilities and limitations
+- Working with APIs and interfaces
+- Hands-on practice with real models
+
+### Chapter 3: Contextualizing LLMs
+**Advanced Applications**
+- Retrieval-Augmented Generation (RAG) techniques
+- Knowledge graphs and advanced context methods
+- Building complete applications with user interfaces
+
+## Learning Approach
+
+### Progressive Complexity
+Each chapter builds upon the previous one, ensuring you have a solid foundation before moving to more advanced topics.
+
+### Hands-On Practice
+Theory is always paired with practical exercises, allowing you to immediately apply what you learn.
+
+### Research-Focused Examples
+All examples and exercises are designed with social science research applications in mind.
+
+## What You'll Need
+
+### Technical Prerequisites
+- Basic familiarity with Python (we'll provide refreshers)
+- Access to Google Colab (free, no installation required)
+- Willingness to work through mathematical concepts step-by-step
+
+### Mindset
+- Curiosity about how AI tools work
+- Patience with technical concepts
+- Interest in applying new tools to research problems
+- Openness to discussing limitations and biases
+
+## Getting the Most from This Course
+
+### Before Each Chapter
+- Complete the pre-reading materials
+- Set up your technical environment
+- Review any prerequisites
+
+### During Each Chapter
+- Work through exercises step-by-step
+- Don't rush through mathematical concepts
+- Ask questions when something isn't clear
+- Reflect on how concepts apply to your research
+
+### After Each Chapter
+- Reflect on what you learned
+- Practice with your own examples
+- Connect to the next chapter's content
+- Consider attending BLISS workshops for hands-on practice
+
+## BLISS Workshop Connection
+
+This book complements our in-person workshop series. While the book provides comprehensive self-paced learning, our workshops offer:
+
+- **Hands-on guided practice** with expert instructors
+- **Real-time feedback** and troubleshooting
+- **Collaborative learning** with other researchers
+- **Advanced topics** and specialized applications
+- **Networking opportunities** with the BLISS community
+
+Visit [yemretapan.com/bliss](https://yemretapan.com/bliss) for upcoming workshop dates and registration information.
+
+## Navigation
+
+**Next:** [Technical Setup & Learning Strategies →](02-setup-and-strategies.qmd) 

@@ -1,0 +1,91 @@
+---
+title: "Technical Setup & Learning Strategies"
+chapter: true
+---
+
+## Overview
+
+This chapter combines practical setup instructions with effective learning strategies. You'll learn how to get started with the technical tools and develop approaches that work for social science researchers.
+
+## Technical Setup
+
+### Google Colab Environment
+- **No installation required** - everything runs in your browser
+- **Free access** to powerful computing resources
+- **Collaborative features** for sharing and version control
+
+### Getting Started
+1. **Access**: Go to [colab.research.google.com](https://colab.research.google.com)
+2. **Sign in** with your Google account
+3. **Create notebook** and start coding immediately
+
+### Essential Python Concepts
+- **Variables**: Storing data (text, numbers, lists)
+- **Functions**: Reusable code blocks
+- **Libraries**: Pre-built tools for specific tasks
+- **Data structures**: Lists, dictionaries for organizing information
+
+## Learning Strategies for Social Scientists
+
+### Overcoming Math Anxiety
+- **Focus on concepts** over memorization
+- **Real-world examples** make abstract ideas concrete
+- **Step-by-step approach** - no rushing through complex topics
+- **Practice with familiar data** from your research area
+
+### Effective Learning Techniques
+- **Preview material** before diving in
+- **Take notes** in your own words
+- **Practice immediately** with exercises
+- **Connect to your research** - think about applications
+- **Use multiple resources** when needed
+
+### Building Confidence
+- **Start small** and build gradually
+- **Regular practice** (15-30 minutes daily)
+- **Multiple learning styles** - visual, auditory, hands-on
+- **Safe environment** - you can't break anything permanently
+
+## Common Challenges and Solutions
+
+### "I'm not good at math"
+**Solution**: Focus on understanding concepts through examples. Many mathematical ideas are intuitive when explained properly.
+
+### "I don't have a computer science background"
+**Solution**: We explain technical concepts in social science terms. Many tools are designed to be user-friendly.
+
+### "I don't have time"
+**Solution**: Focus on concepts most relevant to your research. You don't need to understand everything to use LLMs effectively.
+
+## Getting Help When Stuck
+
+### Self-Help Strategies
+- **Re-read explanations** with fresh eyes
+- **Look for concrete examples**
+- **Break problems into smaller parts**
+- **Try different approaches**
+
+### Asking for Help
+- **Be specific** about what's confusing
+- **Show your work** and thought process
+- **Request examples** related to your research
+
+## Connecting to Your Research
+
+### Throughout the Course
+- **Think about applications** to your specific research
+- **Use your own examples** and data
+- **Consider limitations** and ethical implications
+- **Focus on practical skills** over theoretical perfection
+
+### Research Applications to Explore
+- **Text analysis**: Interview transcripts, survey responses
+- **Literature reviews**: Summarizing and synthesizing papers
+- **Survey design**: Generating and analyzing questions
+- **Data preprocessing**: Cleaning and preparing text data
+- **Communication**: Writing summaries and reports
+
+## Navigation
+
+**Previous:** [Course Overview ←](01-course-overview.qmd)  
+**Next:** [Neural Networks Fundamentals →](../01-fundamentals/01-neural-networks.qmd) 

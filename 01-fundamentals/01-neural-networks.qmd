@@ -1,0 +1,122 @@
+---
+title: "Neural Networks Fundamentals"
+chapter: true
+---
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Calculate perceptron outputs by hand for simple decisions
+- Understand neural network architecture and how layers connect
+- Perform forward propagation step-by-step through a network
+- Grasp backpropagation basics and how networks learn from mistakes
+- Visualize how networks process information
+- Prepare for advanced topics like transformers and embeddings
+
+## Introduction
+
+Welcome to Neural Networks Fundamentals! Today you'll learn the mathematical foundations of deep learning by working through calculations by hand. No coding required - we'll focus on understanding how neural networks think and learn at the most basic level.
+
+**Duration:** 2 hours  
+**What you need:** Basic algebra and willingness to work through math step-by-step  
+**Approach:** Hand calculations and visual understanding
+
+## What You Should Know
+
+### Prerequisites
+- Basic algebra and arithmetic
+- Understanding of functions (input → output)
+- Familiarity with graphs and coordinates
+- Matrix multiplication basics (we'll review this)
+
+### Learning Approach
+This lab is **calculation-intensive** but **beginner-friendly**:
+- **Step-by-step guidance**: Every calculation broken down clearly
+- **Real examples**: "Should we go to the beach?" and other relatable decisions
+- **Visual aids**: Diagrams showing information flow
+- **Immediate understanding**: See exactly how each step contributes
+
+## Session 1: Perceptron by Hand (50 minutes)
+
+### What we'll do: Build your first "artificial brain cell"
+
+**Exercise**: Work through the "Should we go to the beach?" decision problem
+- Calculate weighted inputs step-by-step
+- Apply activation functions to make binary decisions
+- Understand the geometry of linear decision boundaries
+- Practice with multiple examples and variations
+- Explore different scenarios and weight adjustments
+
+**You'll learn:** How the simplest neural network makes decisions
+
+### The Problems You'll Solve
+
+**Perceptron Example**: "Should we go to the beach?"
+- **Inputs**: Weather conditions (sunny, temperature, humidity)
+- **Process**: Weight each factor and make a decision
+- **Output**: Yes/No decision with confidence
+
+## Session 2: Backpropagation by Hand (50 minutes)
+
+### What we'll do: Discover how networks learn from their mistakes
+
+- Start with a simple multi-layer network example
+- Make a prediction and calculate the error
+- Work backwards through the network using chain rule
+- Calculate gradients and weight updates step-by-step
+- Understand gradient descent intuitively
+- Practice with a complete learning cycle example
+
+**You'll learn:** The magic behind how neural networks improve over time
+
+### Neural Network Example**: Complex pattern recognition
+- **Architecture**: Input → Hidden Layer → Output
+- **Forward Pass**: Calculate predictions
+- **Backward Pass**: Learn from mistakes
+
+## Mathematical Skills You'll Develop
+
+**Mathematical Skills**:
+- Matrix multiplication in neural network context
+- Understanding weighted sums and activation functions
+- Basic calculus concepts (derivatives for learning)
+- Visualization of mathematical concepts
+
+**Conceptual Skills**:
+- How information flows through networks
+- Why networks can learn complex patterns
+- The relationship between structure and function
+- Preparing for more advanced architectures
+
+## Wrap-up and Reflection
+
+### Review the Complete Journey
+- From simple decisions to learning
+- Discuss what surprised you most about the mathematics
+- Connect to modern AI: How these principles scale to large networks
+- Preview Chapter 2: Transformers and Embeddings
+
+### Key Takeaways
+- Neural networks are mathematical functions that can learn
+- The perceptron is the building block of all neural networks
+- Backpropagation enables learning through error correction
+- These principles scale to modern AI systems
+
+## Connection to Research
+
+### Why This Matters for Social Science
+- **Understanding AI tools**: Know how the tools you use actually work
+- **Interpreting results**: Better understand what AI outputs mean
+- **Designing studies**: Create better prompts and inputs for AI systems
+- **Ethical considerations**: Understand limitations and potential biases
+
+### Research Applications
+- **Survey design**: Understanding how AI might process responses
+- **Data analysis**: Knowing how AI models interpret your data
+- **Literature review**: Understanding AI summarization capabilities
+- **Communication**: Explaining AI concepts to research participants
+
+## Navigation
+
+**Previous:** [Technical Setup & Learning Strategies ←](../00-getting-started/02-setup-and-strategies.qmd)  
+**Next:** [Transformers and Embeddings →](02-transformers.qmd) 
