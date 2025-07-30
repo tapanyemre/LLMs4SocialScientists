@@ -95,18 +95,3 @@ Visit [yemretapan.com/bliss](https://yemretapan.com/bliss) for upcoming workshop
 ## Navigation
 
 **Next:** [Technical Setup & Learning Strategies →](02-setup-and-strategies.qmd) 
-
-<div class="comments-section">
-<hr class="comments-divider">
-<div class="comments-container">
-<h3 class="comments-title">Join the Discussion</h3>
-<p class="comments-description">Have questions about this content? Want to share insights with other social science researchers? Join the conversation in our GitHub Discussions.</p>
-<div class="comments-actions">
-<a href="https://github.com/tapanyemre/LLMs4SocialScientists/discussions" class="btn btn-primary comments-btn" target="_blank" rel="noopener">View Discussions</a>
-<a href="https://github.com/tapanyemre/LLMs4SocialScientists/discussions/new" class="btn btn-outline comments-btn" target="_blank" rel="noopener">Start New Discussion</a>
-</div>
-<div class="comments-note">
-<p><strong>For Researchers:</strong> This discussion space is designed for social science researchers to share experiences, ask methodological questions, and discuss applications of LLMs in their work.</p>
-</div>
-</div>
-</div> 

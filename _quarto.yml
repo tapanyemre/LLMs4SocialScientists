@@ -9,6 +9,16 @@ book:
   date: today
   repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
   repo-actions: [edit, issue, source]
+  comments:
+    giscus:
+      repo: tapanyemre/LLMs4SocialScientists
+      repo-id: R_kgDOLhXqXQ
+      category: Discussions
+      category-id: DIC_kwDOLhXqXQc4CbqE
+      mapping: pathname
+      reactions-enabled: true
+      input-position: bottom
+      theme: light
   chapters:
     - index.qmd
     - part: getting-started.qmd
