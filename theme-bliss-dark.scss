@@ -1,0 +1,131 @@
+/*-- scss:defaults --*/
+
+// BLISS editorial — dark. Navy night: deep ink page, cream text,
+// sky-blue accents. Companion to theme-bliss-light.scss.
+
+$navy-deep: #101b34;
+$navy: #162444;
+$cream: #e9e4d6;
+$cream-soft: #b9c4dd;
+$sky-link: #8fb3f5;
+$cobalt: #1d4ed8;
+
+$body-bg: $navy-deep;
+$body-color: $cream;
+$primary: $sky-link;
+$link-color: $sky-link;
+$link-decoration: none;
+
+$font-family-base: "Newsreader", "Iowan Old Style", Georgia, serif;
+$headings-font-family: "Newsreader", Georgia, serif;
+$font-family-monospace: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+$font-size-root: 18px;
+$line-height-base: 1.65;
+$headings-font-weight: 600;
+
+$code-color: #a8c4f7;
+$code-bg: rgba(143, 179, 245, 0.1);
+$code-block-bg: $navy;
+$border-color: rgba(233, 228, 214, 0.16);
+
+$sidebar-bg: $navy-deep;
+$navbar-bg: $navy-deep;
+
+$toc-font-size: 0.8rem;
+
+/*-- scss:rules --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+h1, h2, h3, .title { letter-spacing: -0.01em; line-height: 1.15; color: $cream; }
+h1 .chapter-number, .chapter-title .chapter-number { color: $sky-link; }
+.quarto-title-meta-heading {
+  font-family: $font-family-monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $cream-soft;
+}
+.quarto-title .subtitle { font-style: italic; color: $cream-soft; }
+
+#quarto-sidebar {
+  background: $navy-deep;
+  border-right: 1px solid $border-color !important;
+}
+.sidebar-title { font-family: $headings-font-family; font-weight: 600; font-size: 1.15rem; color: $cream; }
+.sidebar-item .sidebar-item-container .menu-text { color: $cream-soft; }
+.sidebar-item .sidebar-item-container a.active .menu-text { color: $sky-link; font-weight: 600; }
+.sidebar-item-section > .sidebar-item-container .menu-text {
+  font-family: $font-family-monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $cream;
+}
+.chapter-number { color: $sky-link; }
+
+#TOC, .toc-active { font-family: $font-family-monospace; }
+#toc-title { font-family: $font-family-monospace; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; }
+
+p a, li a { border-bottom: 1px solid rgba(143, 179, 245, 0.35); }
+p a:hover, li a:hover { border-bottom-color: $sky-link; }
+
+pre.sourceCode, div.sourceCode {
+  border: 1px solid $border-color;
+  border-left: 3px solid $sky-link;
+  border-radius: 8px;
+  background: $navy;
+}
+code { font-size: 0.85em; }
+
+.callout {
+  border-radius: 10px;
+  border: 1px solid $border-color !important;
+  border-left-width: 4px !important;
+  background: rgba(22, 36, 68, 0.6);
+}
+.callout-note { border-left-color: $sky-link !important; }
+.callout-important { border-left-color: #d98d5f !important; }
+
+.table thead th {
+  font-family: $font-family-monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 2px solid $cream;
+}
+.table { color: $cream; }
+
+.nav-page .nav-page-text { font-family: $font-family-monospace; font-size: 0.78rem; }
+.aa-DetachedSearchButton, #quarto-search { font-family: $font-family-monospace; }
+
+// ── Link-preview popups (Obsidian-style page previews) ────────
+.tippy-box[data-theme~="link-preview"] {
+  background: $navy;
+  color: $cream;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  font-family: $font-family-base;
+}
+.tippy-box[data-theme~="link-preview"] .tippy-content { padding: 0.85rem 1rem; }
+.tippy-box[data-theme~="link-preview"] .tippy-arrow { color: $navy; }
+.link-preview p { font-size: 0.82rem; line-height: 1.55; margin: 0 0 0.5rem; color: $cream-soft; }
+.link-preview-title {
+  font-family: $headings-font-family;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: $cream;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid $border-color;
+}
+.link-preview-hint {
+  font-family: $font-family-monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(233, 228, 214, 0.4);
+  margin-top: 0.2rem;
+}

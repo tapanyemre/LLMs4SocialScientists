@@ -1,0 +1,19 @@
+# Circuits {#sec-circuits}
+
+::: {.callout-important appearance="simple" icon="false"}
+**📋 Status: `planned`** — this chapter is on the roadmap but not yet written. The outline below is the current plan; if this topic matters to your research, say so in the comments and it moves up the queue.
+:::
+
+Features (@sec-sparse-autoencoders) are the *vocabulary* a model thinks in. Circuits are the *grammar*: how features connect into computations that carry out a task — copying a name, resolving a pronoun, completing a pattern. Circuit analysis is the most ambitious project in mechanistic interpretability: a full mechanistic story of a behavior, from input to output.
+
+## Planned coverage
+
+- What a circuit is: features composed across layers and attention heads into an algorithm
+- Classic worked examples from the literature, and what "explaining a behavior" means there
+- Attribution graphs and tracing model "thoughts"
+- The social science angle: circuits as institutions — stable, reusable structures the model builds without anyone designing them
+- Honest limits: how much of a frontier model has actually been mapped
+
+## In the meantime
+
+- The video introduced in @sec-why-interpretability — Anthropic's *Tracing the thoughts of a large language model* — is the best non-technical preview of circuit-style analysis.

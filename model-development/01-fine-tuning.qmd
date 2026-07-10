@@ -1,0 +1,19 @@
+# Fine-Tuning for Research {#sec-fine-tuning}
+
+::: {.callout-important appearance="simple" icon="false"}
+**📋 Status: `planned`** — this chapter is on the roadmap but not yet written. The outline below is the current plan; if this topic matters to your research, say so in the comments and it moves up the queue.
+:::
+
+Everything before this part treated the model as fixed: we used it, steered it, read it. This part is about *changing* it. Fine-tuning adapts a pretrained model to your task or domain — and for a researcher, it raises a distinct set of questions: when is it worth it, what does it cost, and what does it do to the validity of your measurements?
+
+## Planned coverage
+
+- The decision framework: prompting vs. RAG vs. fine-tuning — when each wins, with research examples
+- Parameter-efficient fine-tuning (LoRA and friends) on a single GPU or Colab
+- Building a fine-tuning dataset from annotated social science data — and the labeling pitfalls that poison it
+- Evaluating a fine-tuned model like a measurement instrument: held-out validity, drift, documentation
+- Reproducibility: versioning data, weights, and training runs so your method section survives review
+
+## In the meantime
+
+- Batch processing at research scale (@sec-batch) covers the annotation workflows that produce fine-tuning data.

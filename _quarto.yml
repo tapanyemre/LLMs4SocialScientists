@@ -1,15 +1,36 @@
+# ============================================================
+# DEFAULT PROFILE = the PUBLISHED book (what readers see).
+# Only chapters listed here are rendered and deployed.
+#
+# The full manuscript (drafts included) lives in _quarto-full.yml.
+#   Preview everything locally:  quarto preview --profile full
+#   Publish a chapter:           move its line from _quarto-full.yml
+#                                into the chapters list below
+#                                (keep it in _quarto-full.yml too).
+# ============================================================
+
 project:
   type: book
   output-dir: _book
 
 book:
   title: "LLMs for Social Scientists"
-  subtitle: "A Progressive Journey from Fundamentals to Advanced Applications"
+  subtitle: "A Working Draft"
   author: "Yunus Emre Tapan"
-  date: today
+  date: last-modified
+  site-url: https://yemretapan.com/llms4socialscientists
   favicon: assets/images/parrot-icon.png
   repo-url: https://github.com/tapanyemre/LLMs4SocialScientists
   repo-actions: [edit, issue]
+  downloads: [pdf]
+  reader-mode: true
+  sidebar:
+    search: true
+  page-footer:
+    left: |
+      © 2026 Yunus Emre Tapan · CC BY-NC 4.0 (text) · MIT (code)
+    right: |
+      A living draft — <a href="https://github.com/tapanyemre/LLMs4SocialScientists/issues/new?template=content-issue.md">report an issue</a>
   comments:
     giscus:
       repo: tapanyemre/LLMs4SocialScientists
@@ -22,37 +43,29 @@ book:
       theme: light
   chapters:
     - index.qmd
-    - part: getting-started.qmd
-      chapters:
-        - 00-getting-started/01-course-overview.qmd
-        - 00-getting-started/02-setup-and-strategies.qmd
-    - part: fundamentals.qmd
-      chapters:
-        - 01-fundamentals/01-neural-networks.qmd
-        - 01-fundamentals/02-transformers.qmd
-    - part: llms-in-action.qmd
-      chapters:
-        - 02-llms-in-action/01-llm-capabilities.qmd
-        - 02-llms-in-action/02-llm-apis.qmd
-    - part: contextualizing-llms.qmd
-      chapters:
-        - 03-contextualizing-llms/01-rag-context.qmd
-        - 03-contextualizing-llms/02-llm-showcase.qmd
+    - roadmap.qmd
     - references.qmd
 
 format:
   html:
-    theme: default
+    theme:
+      light: [default, theme-bliss-light.scss]
+      dark: [default, theme-bliss-dark.scss]
+    respect-user-color-scheme: true
     toc: true
     toc-location: right
     toc-depth: 3
     number-sections: true
-    code-fold: true
+    code-fold: false
     code-tools: true
+    code-copy: true
+    citations-hover: true
+    footnotes-hover: true
+    crossrefs-hover: true
+    lightbox: true
     fig-cap-location: bottom
-    css: styles.css
-    logo: assets/images/bliss-logo.png
     include-before-body: _includes/google-analytics.html
+    include-after-body: _includes/link-previews.html
   pdf:
     documentclass: scrreprt
     papersize: a4
@@ -67,7 +80,11 @@ format:
     toc: true
     number-sections: true
 
+# Code is display-only while the book is a draft: no kernel is started,
+# nothing executes at render time. Flip `enabled` to true (and remove
+# eval: false) when chapters gain executable notebooks.
 execute:
+  enabled: false
   echo: true
   eval: false
   warning: false

@@ -1,0 +1,365 @@
+# Open Models with Hugging Face {#sec-huggingface}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have 40,000 parliamentary speeches on immigration and one dissertation deadline. You cannot read them all. You need to know which speeches frame immigration as an economic issue and which frame it as a security issue, who gets named in them, and what the debate looked like in a language you do not speak. Ten years ago each of those steps was a separate methods paper. Today each one is about five lines of Python, running for free in a Colab notebook, using models anyone can download.
+
+This chapter is a tour of ten things off-the-shelf open models can do, organized the way I teach them: understanding text, working with knowledge, and generating text. In @sec-transformers you built the transformer by hand, with numbers small enough to trust. Now you get to use the full-sized, trained versions — and by the end, you will chain several of them into a small research assistant for that speech corpus.
+
+## Why start with open models
+
+There are two ways to use a language model in research: download one and run it yourself, or send your text to a company's API. We start with the first, and not just because it is free.
+
+Open models are **reproducible**. When you write in your methods section that you used `dslim/bert-base-NER`, revision such-and-such, anyone can download the identical weights and get the identical output. An API model can be silently updated between your analysis and someone's replication attempt.
+
+Open models are **private**. Your interview transcripts and survey responses never leave your machine (or your Colab session). If your IRB protocol says participant data stays under your control, a local model is often the only option that satisfies it.
+
+And open models are **inspectable**. The interpretability half of this book — from @sec-why-interpretability through logit lens, sparse autoencoders, and activation patching (@sec-activation-patching) — only works when you can see the weights. You cannot open up GPT-5.
+
+Honesty requires the flip side: the small models in this chapter are much weaker than frontier API models. For subtle judgments — irony, implicit frames, multi-step reasoning — a small open model will lose to Claude or GPT, and I will flag those cases as we go. The next chapter (@sec-apis) covers when and how to pay for the difference. The skill you are building here is knowing which tasks *don't* need a frontier model, because many don't.
+
+[Hugging Face](https://huggingface.co/) is where open models live: a hub of over a million models, plus the `transformers` library that gives them all one interface. Make a free account before you start — some models require you to accept a license first.
+
+<!-- DRAFT NOTE (Emre): personal anecdote here — the first time you ran a model in Colab in front of a class, or why the AIDE lab was called "Gentle Hugging Face". -->
+
+## The pipeline
+
+Everything in this chapter runs through one function: `pipeline()`. A pipeline bundles the three steps you would otherwise write yourself:
+
+1. **Tokenize** — turn your text into the integer IDs the model reads (you did this by hand in @sec-transformers).
+2. **Run the model** — a forward pass through the network.
+3. **Post-process** — turn raw scores back into something useful: a label, an answer span, a translation.
+
+Setup is two lines plus a device check:
+
+```{python}
+!pip install -q transformers torch sentence-transformers sentencepiece
+
+import torch
+from transformers import pipeline
+
+device = 0 if torch.cuda.is_available() else -1  # 0 = GPU, -1 = CPU
+```
+
+::: {.callout-tip}
+In Colab, a free GPU makes everything in this chapter 5–10x faster: Runtime → Change runtime type → GPU. Everything also works on CPU; it is just slower. If a model runs out of memory, use a smaller one from the table below — for these tasks, small models are usually enough.
+:::
+
+Here is a small corpus to work with — five snippets in the register of a parliamentary immigration debate. We will reuse it for every capability:
+
+```{python}
+speeches = [
+    "The honourable member knows full well that our asylum system is at breaking point, and this government has done nothing but delay.",
+    "Immigration built this country. My constituents in Birmingham know it, and the small businesses on their high streets know it.",
+    "We welcome those who come here legally, but we cannot ask communities to absorb unlimited numbers without support.",
+    "The Home Secretary's new bill will cost millions and deter no one. It is a press release, not a policy.",
+    "Seasonal workers from Romania and Bulgaria kept our farms running during the pandemic. This bill turns its back on them.",
+]
+```
+
+## Understanding text
+
+### 1. Text classification
+
+Classification assigns each text to one of a fixed set of categories. The classic case is sentiment:
+
+```{python}
+classifier = pipeline(
+    "sentiment-analysis",
+    model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+    device=device,
+)
+
+for s in speeches[:3]:
+    result = classifier(s)[0]
+    print(f"{result['label']:>8}  {result['score']:.2f}  {s[:60]}...")
+```
+
+Each result has a label and a score. The score is the model's confidence, not the probability that the label is correct — treat it as a reading, not a proof.
+
+**Research mapping:** tone of media coverage, negativity in campaign communication, affect in open-ended survey responses. For social media text, swap in [`cardiffnlp/twitter-roberta-base-sentiment-latest`](https://hf.co/cardiffnlp/twitter-roberta-base-sentiment-latest), which was trained on tweets and adds a neutral class.
+
+::: {.callout-warning}
+This sentiment model was trained on movie reviews. Run it on speech 4 — "It is a press release, not a policy" — and think about what a movie-review model can and cannot know about parliamentary sarcasm. Off-the-shelf classifiers carry their training data's domain with them. Before you trust one on your corpus, hand-code a sample of a few hundred documents and check agreement. This is a validity question, not a technical one.
+:::
+
+### 2. Named entity recognition
+
+NER finds and labels the people, organizations, and places mentioned in text:
+
+```{python}
+ner = pipeline(
+    "ner",
+    model="dslim/bert-base-NER",
+    aggregation_strategy="simple",
+    device=device,
+)
+
+for entity in ner(speeches[4]):
+    print(f"{entity['word']:>10}  {entity['entity_group']}  ({entity['score']:.2f})")
+# Romania and Bulgaria -> LOC
+```
+
+**Research mapping:** who appears in news coverage and how often; building actor lists from event data; mapping which countries get named together in foreign policy debates. For non-English or mixed-language corpora, [`Davlan/bert-base-multilingual-cased-ner-hrl`](https://hf.co/Davlan/bert-base-multilingual-cased-ner-hrl) covers ten high-resource languages.
+
+### 3. Zero-shot classification
+
+This is the one social scientists should pay closest attention to. Ordinary classifiers only know the categories they were trained on. A zero-shot classifier takes *your* categories, as plain-language labels, at runtime — no training data required:
+
+```{python}
+zero_shot = pipeline(
+    "zero-shot-classification",
+    model="MoritzLaurer/deberta-v3-base-zeroshot-v2.0",
+    device=device,
+)
+
+frames = ["economy", "security", "humanitarian obligation", "public services"]
+
+result = zero_shot(speeches[4], candidate_labels=frames)
+print(f"Top frame: {result['labels'][0]} ({result['scores'][0]:.2f})")
+# Top frame: economy
+```
+
+Under the hood this is a natural language inference model asking, for each label, "does this text entail the statement *this example is about the economy*?" That trick — repurposing NLI as a universal classifier — is why you can hand it a coding scheme it has never seen.
+
+**Research mapping:** frame analysis, topic coding with a codebook you designed, stance detection. [Laurer, van Atteveldt, Casas, and Welbers (2024)](https://www.cambridge.org/core/journals/political-analysis/article/less-annotating-more-classifying-addressing-the-data-scarcity-issue-of-supervised-machine-learning-with-deep-transfer-learning-and-bertnli/05BB05555241762889825B080E097C27) show in *Political Analysis* that NLI-based classifiers fine-tuned on ~500 documents match classical supervised models trained on ~5,000 — an order of magnitude less annotation. The [Political DEBATE models (Burnham, Kahn, Wang & Peng 2025)](https://www.cambridge.org/core/journals/political-analysis/article/political-debate-efficient-zeroshot-and-fewshot-classifiers-for-political-text/8D0B3E2AAF711F4812E42466DE503A13) push the same idea further, training NLI classifiers specifically for political text. If you learn one capability from this chapter, learn this one.
+
+<!-- DRAFT NOTE (Emre): your opinion on zero-shot vs. paying for API annotation — where you actually draw the line in your own projects. -->
+
+## Working with knowledge
+
+### 4. Question answering
+
+Extractive QA finds the *span* of a given text that answers a question:
+
+```{python}
+qa = pipeline(
+    "question-answering",
+    model="deepset/roberta-base-squad2",
+    device=device,
+)
+
+answer = qa(
+    question="Who kept the farms running?",
+    context=speeches[4],
+)
+print(f"{answer['answer']}  (confidence: {answer['score']:.2f})")
+# Seasonal workers from Romania and Bulgaria
+```
+
+Two honest notes. First, generative models (next chapter) have largely superseded extractive QA for open-ended questions. Second, extractive QA retains one property researchers should not give up lightly: the answer is a literal substring of the source, with character offsets (`answer['start']`, `answer['end']`). It cannot hallucinate an answer that is not in the text. When you need auditable extraction — every answer traceable to a location in a document — this older tool is still the right one.
+
+**Research mapping:** pulling structured fields out of semi-structured documents — the sponsor from a bill, the sample size from a methods section, the demand from a protest report.
+
+### 5. Summarization
+
+```{python}
+summarizer = pipeline(
+    "summarization",
+    model="sshleifer/distilbart-cnn-12-6",
+    device=device,
+)
+
+debate_excerpt = " ".join(speeches)
+summary = summarizer(debate_excerpt, max_length=60, min_length=20)
+print(summary[0]["summary_text"])
+```
+
+This model is *abstractive*: it writes new sentences rather than selecting existing ones, which means it can state things the source never said. For skimming a corpus, fine. For anything you will quote or code from, verify against the original. Long documents are also a problem — this model truncates at 1,024 tokens, so a 30-page transcript needs chunking or an API model with a long context window (@sec-apis).
+
+**Research mapping:** first-pass digests of news archives, committee transcripts, or long interview segments before close reading.
+
+### 6. Sentence similarity
+
+Embedding models turn a text into a vector of numbers such that similar meanings get nearby vectors. @sec-embeddings builds this from scratch; here is the one-paragraph version, by hand.
+
+Pretend an embedding had only 3 dimensions and gave us these vectors:
+
+| Sentence | d1 | d2 | d3 |
+|---|---|---|---|
+| "Migrant workers support the farm economy" | 0.9 | 0.1 | 0.3 |
+| "Seasonal labour keeps agriculture running" | 0.8 | 0.2 | 0.4 |
+| "The border needs stronger enforcement" | 0.1 | 0.9 | 0.2 |
+
+Similarity is the cosine of the angle between two vectors: multiply matching dimensions, add them up, divide by the vectors' lengths. Rows 1 and 2: $(0.9)(0.8) + (0.1)(0.2) + (0.3)(0.4) = 0.86$, and dividing by the lengths ($0.954 \times 0.917$) gives $0.98$ — nearly identical meaning, despite sharing no content words. Rows 1 and 3 give $0.24 / 0.884 \approx 0.27$ — related topic, different claim. Real embeddings do exactly this in 384 dimensions:
+
+```{python}
+from sentence_transformers import SentenceTransformer, util
+
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+embeddings = embedder.encode(speeches)
+
+similarities = util.cos_sim(embeddings, embeddings)
+print(similarities[1][4])  # Birmingham speech vs. seasonal workers speech
+```
+
+**Research mapping:** deduplicating scraped news, clustering open-ended survey answers into themes, finding every speech similar to a hand-picked exemplar. This is also the engine inside retrieval-augmented generation (@sec-rag). For multilingual corpora, use [`paraphrase-multilingual-MiniLM-L12-v2`](https://hf.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2), which puts fifty languages in one shared space — a Turkish sentence and its English translation land near each other.
+
+## Generating text
+
+### 7. Text generation
+
+Generation is what made LLMs famous: continue or produce text from a prompt. Small instruction-tuned models now fit in a free Colab session:
+
+```{python}
+generator = pipeline(
+    "text-generation",
+    model="HuggingFaceTB/SmolLM2-360M-Instruct",
+    device=device,
+)
+
+messages = [{"role": "user",
+             "content": "Write one neutral sentence summarizing the debate over seasonal worker visas."}]
+out = generator(messages, max_new_tokens=80)
+print(out[0]["generated_text"][-1]["content"])
+```
+
+Note the format: a list of messages with roles, not a bare string. Modern pipelines apply the model's chat template for you. A 360M-parameter model will produce competent but shallow text — useful for prototyping the *shape* of a task before you spend money on a frontier model.
+
+**Research mapping:** drafting codebook examples, generating candidate survey items to edit, prototyping the annotation prompts you will later scale up in @sec-prompting.
+
+### 8. Translation
+
+```{python}
+translator = pipeline(
+    "translation",
+    model="facebook/nllb-200-distilled-600M",
+    src_lang="tur_Latn",
+    tgt_lang="eng_Latn",
+    device=device,
+)
+
+tr = "Göç politikası sadece sınır güvenliği meselesi değildir; aynı zamanda bir emek piyasası meselesidir."
+print(translator(tr)[0]["translation_text"])
+# Migration policy is not only a border security issue; it is also a labour market issue.
+```
+
+NLLB covers 200 languages in one model. For a single high-resource pair, the smaller [Helsinki-NLP OPUS-MT models](https://hf.co/Helsinki-NLP/opus-mt-en-de) (one per language pair) are faster.
+
+**Research mapping:** comparative politics without a translation budget — bringing parliamentary debates, party manifestos, or news from many countries into one working language before analysis. Machine translation then analysis introduces its own error; validate on a bilingual subsample if the comparison is the point of the paper.
+
+### 9. Conversation
+
+A chat is just generation with memory: you keep appending to the message list.
+
+```{python}
+chat = pipeline(
+    "text-generation",
+    model="Qwen/Qwen2.5-1.5B-Instruct",
+    device=device,
+)
+
+messages = [
+    {"role": "system", "content": "You are a careful research assistant coding parliamentary speeches."},
+    {"role": "user", "content": f"Is this speech pro- or anti-immigration? Answer in one word, then one sentence of justification.\n\nSpeech: {speeches[1]}"},
+]
+out = chat(messages, max_new_tokens=100)
+reply = out[0]["generated_text"][-1]["content"]
+print(reply)
+
+messages.append({"role": "assistant", "content": reply})
+messages.append({"role": "user", "content": "And what about economic framing?"})
+```
+
+There is no hidden state — the model re-reads the whole conversation every turn. That mental model will matter constantly when you work with APIs.
+
+**Research mapping:** a local, private annotator for sensitive data — and a rehearsal space for the multi-turn prompting strategies of the steering chapters (starting in @sec-prompting). At 1.5B parameters, expect it to handle explicit instructions well and subtle constructs poorly.
+
+### 10. Images and text
+
+Multimodal models connect images to language. The most useful one for researchers is also one of the oldest: CLIP does zero-shot *image* classification — your categories, no training, same trick as capability 3:
+
+```{python}
+image_classifier = pipeline(
+    "zero-shot-image-classification",
+    model="openai/clip-vit-base-patch32",
+    device=device,
+)
+
+result = image_classifier(
+    "photo.jpg",
+    candidate_labels=["a protest march", "a press conference", "a parliamentary session"],
+)
+print(result[0])
+```
+
+For turning images into text you can then analyze, [`Salesforce/blip-image-captioning-base`](https://hf.co/Salesforce/blip-image-captioning-base) generates captions with `pipeline("image-to-text", ...)`.
+
+**Research mapping:** coding protest photos at scale, classifying campaign visuals, measuring what kinds of images accompany immigration coverage. Visual politics is an underused frontier, partly because hand-coding images is so expensive. It no longer is.
+
+## Choosing a model
+
+The Hub has over a million models; most are abandoned experiments. Here is my current starting lineup — small, well-documented, still maintained:
+
+| # | Capability | `pipeline()` task | Starting model (2026) | Params | Example research task |
+|---|---|---|---|---|---|
+| 1 | Classification | `sentiment-analysis` | [distilbert-...-sst-2-english](https://hf.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english) | 67M | Tone of coverage |
+| 2 | NER | `ner` | [dslim/bert-base-NER](https://hf.co/dslim/bert-base-NER) | 108M | Actors in news |
+| 3 | Zero-shot | `zero-shot-classification` | [deberta-v3-base-zeroshot-v2.0](https://hf.co/MoritzLaurer/deberta-v3-base-zeroshot-v2.0) | 184M | Frame coding |
+| 4 | QA | `question-answering` | [deepset/roberta-base-squad2](https://hf.co/deepset/roberta-base-squad2) | 125M | Auditable extraction |
+| 5 | Summarization | `summarization` | [sshleifer/distilbart-cnn-12-6](https://hf.co/sshleifer/distilbart-cnn-12-6) | 306M | Corpus digests |
+| 6 | Similarity | (sentence-transformers) | [all-MiniLM-L6-v2](https://hf.co/sentence-transformers/all-MiniLM-L6-v2) | 23M | Clustering open-ends |
+| 7 | Generation | `text-generation` | [SmolLM2-360M-Instruct](https://hf.co/HuggingFaceTB/SmolLM2-360M-Instruct) | 362M | Prompt prototyping |
+| 8 | Translation | `translation` | [nllb-200-distilled-600M](https://hf.co/facebook/nllb-200-distilled-600M) | 600M | Comparative corpora |
+| 9 | Chat | `text-generation` + messages | [Qwen2.5-1.5B-Instruct](https://hf.co/Qwen/Qwen2.5-1.5B-Instruct) | 1.5B | Private local annotator |
+| 10 | Image + text | `zero-shot-image-classification` | [clip-vit-base-patch32](https://hf.co/openai/clip-vit-base-patch32) | 151M | Protest image coding |
+
+Three habits when you go beyond this table. **Read the model card** — what data was it trained on, and does that domain resemble yours? **Check the signals** — download counts and a recent last-modified date are crude but useful proxies for "still works." **Pin the version** — `pipeline(..., revision="<commit hash>")` freezes the exact weights, which is what makes your methods section replicable two years from now.
+
+The classics from my original lab still run — `facebook/bart-large-mnli` for zero-shot, `Helsinki-NLP/opus-mt-en-de` for translation — but where a clearly better small model exists in 2026, the table reflects it. What I no longer recommend: GPT-2 and DialoGPT for generation and chat. They were the teaching standards for years, and instruction-tuned small models have simply replaced them.
+
+## Combining capabilities
+
+No single capability is a research design. The payoff comes from chaining them. Here is the skeleton of a speech-analysis assistant built entirely from the pieces above:
+
+```{python}
+def analyze_speech(text):
+    """One speech in, one structured record out."""
+    frame = zero_shot(text, candidate_labels=frames)
+    entities = ner(text)
+    sentiment = classifier(text)[0]
+    return {
+        "text": text,
+        "frame": frame["labels"][0],
+        "frame_score": round(frame["scores"][0], 2),
+        "actors": [e["word"] for e in entities if e["entity_group"] == "PER"],
+        "places": [e["word"] for e in entities if e["entity_group"] == "LOC"],
+        "sentiment": sentiment["label"],
+    }
+
+records = [analyze_speech(s) for s in speeches]
+```
+
+Five lines per speech becomes a dataset: every speech tagged with its dominant frame, its named actors and places, and its tone — ready for a crosstab of frame by party, or a time series of security framing across a legislative term. Some combinations that earn their keep:
+
+| Combination | Research use |
+|---|---|
+| Zero-shot + NER | Which actors appear in security-framed vs. economy-framed speeches |
+| Translation + zero-shot | Code manifestos from six countries with one English codebook |
+| Similarity + summarization | Cluster related articles, then digest one exemplar per cluster |
+| NER + QA | Find every mention of an actor, then extract what is claimed about them |
+| Zero-shot + chat | Cheap model filters 40,000 speeches; better model codes the relevant 2,000 |
+
+That last pattern — a cheap open model as a filter in front of an expensive model — is one of the most cost-effective designs in this book, and @sec-batch turns it into working infrastructure. This loop over five speeches is the same loop you will run over forty thousand.
+
+<!-- DRAFT NOTE (Emre): the AIDE showcase story — what students actually built with the "research assistant" final project, and what broke. -->
+
+## In research
+
+The quiet revolution here is in annotation. Content analysis used to mean training coders, double-coding for reliability, and budgeting months. Zero-shot and NLI-based classifiers change the arithmetic: [Laurer et al. (2024)](https://www.cambridge.org/core/journals/political-analysis/article/less-annotating-more-classifying-addressing-the-data-scarcity-issue-of-supervised-machine-learning-with-deep-transfer-learning-and-bertnli/05BB05555241762889825B080E097C27) demonstrate across eight tasks — manifestos, party positions, policy topics — that a few hundred annotated examples now do the work a few thousand used to. The human coding does not disappear; it moves. You still hand-code a validation sample, because agreement with your codebook is the evidence that the measurement works. What disappears is hand-coding the other 39,500 documents.
+
+It also matters *which* tool you reach for, and the honest benchmark evidence cuts against the hype. [Ziems et al. (2024)](https://aclanthology.org/2024.cl-1.8/) evaluated LLMs across 25 computational social science tasks and found that on classification, zero-shot LLMs generally *fail to beat* fine-tuned smaller models — while on free-form tasks like explanation, they often exceed crowdworker quality. Read that as a division of labor: for well-defined categorical coding, the small, cheap, reproducible models in this chapter are frequently the better scientific instrument; for generation, summary, and open-ended interpretation, the API models of @sec-apis earn their cost.
+
+Two more doors open here. Multilingual models make comparative designs feasible for researchers without a translation budget: NLLB plus a multilingual embedding model puts parliamentary debates from Ankara, Berlin, and Westminster into one analytical space — with validation on bilingual subsamples as the price of admission. And local models solve a problem APIs cannot: confidentiality. If your data are interview transcripts with asylum seekers or open-ended responses from a sensitive survey, "we ran it on our own machine" is a sentence your IRB will accept, and "we sent it to a third-party API" may not be.
+
+## Further reading
+
+- [Hugging Face LLM Course](https://huggingface.co/learn/llm-course) — the official free course; chapters 1–2 cover pipelines and the ideas behind them.
+- [Transformers documentation](https://huggingface.co/docs/transformers) — the reference for every pipeline task and parameter used here.
+- [The Model Hub](https://huggingface.co/models) — browse by task, language, and license; reading model cards is a research skill.
+- [Laurer, van Atteveldt, Casas & Welbers (2024), "Less Annotating, More Classifying"](https://www.cambridge.org/core/journals/political-analysis/article/less-annotating-more-classifying-addressing-the-data-scarcity-issue-of-supervised-machine-learning-with-deep-transfer-learning-and-bertnli/05BB05555241762889825B080E097C27) — the *Political Analysis* paper behind the zero-shot workflow, with replication code.
+- [Burnham, Kahn, Wang & Peng (2025), "Political DEBATE: Efficient Zero-Shot and Few-Shot Classifiers for Political Text"](https://www.cambridge.org/core/journals/political-analysis/article/political-debate-efficient-zeroshot-and-fewshot-classifiers-for-political-text/8D0B3E2AAF711F4812E42466DE503A13) — also in *Political Analysis*: open NLI models purpose-built for political science tasks.
+- [Ziems et al. (2024), "Can Large Language Models Transform Computational Social Science?"](https://aclanthology.org/2024.cl-1.8/) — the benchmark to read before deciding between an open classifier and an API model.
+- [Getting Started With Hugging Face in 15 Minutes (AssemblyAI)](https://www.youtube.com/watch?v=QEaBAZQCtwE) — a quick video walkthrough of the ecosystem if you prefer to watch first.

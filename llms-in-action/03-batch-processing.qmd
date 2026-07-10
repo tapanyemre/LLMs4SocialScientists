@@ -1,0 +1,329 @@
+# Batch Processing at Research Scale {#sec-batch}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+@sec-apis ended with a working API call: a news paragraph in, a policy-topic label out. One call is a demo. Research needs the same call to work ten thousand times in a row, overnight, unattended, and to leave behind results you can defend in a methods section. That gap — between "works once" and "works at corpus scale" — is what this chapter closes.
+
+Our running example: you have 10,000 paragraphs of newspaper coverage and you want each one coded for policy topic — macroeconomy, health, environment, immigration, and so on, in the spirit of the [Comparative Agendas Project](https://www.comparativeagendas.net/) topic scheme. The prompt is written, the model is chosen, a single call works. What remains is engineering, but it is research-grade engineering: the failure mode is not an error message, it is losing eight hours of paid API calls to one hiccup at 2 a.m. — or, worse, publishing ten thousand labels nobody ever checked. So the chapter has two halves. The first half makes the loop survive. The second half — validation and logging — makes the output usable as data.
+
+## Why the naive loop fails
+
+Start with small numbers, on paper.
+
+The obvious loop is three lines:
+
+```{python}
+results = []
+for text in paragraphs:          # do not run this
+    results.append(annotate(text))
+```
+
+Two pieces of arithmetic show why this is a trap.
+
+**Time.** A single API call takes roughly 1–2 seconds. Call it 1.5. Sequentially, 10,000 calls take 15,000 seconds — about four hours. Add the polite `time.sleep(2)` between calls that beginner tutorials teach, and you have added five and a half hours of pure sleeping. The loop runs into the night either way.
+
+**Failure.** Now suppose each individual call succeeds with probability 99.9% — an optimistic figure for four hours of real network traffic against a real provider. The chance that all 10,000 calls succeed is $0.999^{10{,}000}$:
+
+| Per-call success rate | Chance a 10,000-call loop finishes with zero failures |
+|---|---:|
+| 99.9% | ~0.005% |
+| 99.99% | ~37% |
+| 99.999% | ~90% |
+
+Read the first row again. At 99.9% per-call reliability — which sounds excellent — the naive loop essentially *never* finishes. And you do not control the per-call rate; the provider's worst hour of the night does. At scale, failure is not a risk to hope against. It is a certainty to design for. Since the failing call lives inside `annotate()`, the crash takes the entire `results` list with it: hours of compute, real money, gone.
+
+Everything in the next section follows from three design rules:
+
+1. **Every call can fail; no failure may stop the loop.**
+2. **Every result is written to disk the moment it exists.**
+3. **The loop can be killed and restarted without repeating work.**
+
+## A loop that survives
+
+We build it in layers: retries, then progress, then checkpointing and resuming.
+
+The retry layer you already have — it is the exponential-backoff function from @sec-apis. Here it is wrapped around our topic task:
+
+```{python}
+import time
+from openai import OpenAI
+from google.colab import userdata
+
+client = OpenAI(api_key=userdata.get("OPENAI_API_KEY"))
+
+TOPICS = ["macroeconomy", "health", "environment", "immigration",
+          "education", "defense", "law and crime", "other"]
+
+SYSTEM = ("You classify news paragraphs by policy topic. "
+          f"Answer with exactly one of: {', '.join(TOPICS)}.")
+
+def annotate(text, model="gpt-5-mini", max_attempts=4):
+    """One robust call: retries transient failures, raises only when exhausted."""
+    for attempt in range(max_attempts):
+        try:
+            r = client.chat.completions.create(
+                model=model,             # gpt-5 series: temperature not accepted
+                messages=[{"role": "system", "content": SYSTEM},
+                          {"role": "user", "content": f"Paragraph: '{text}'"}],
+            )
+            return r.choices[0].message.content.strip().lower()
+        except Exception as e:
+            wait = 2 ** (attempt + 1)        # 2, 4, 8, 16 seconds
+            time.sleep(wait)
+    raise RuntimeError("all attempts failed")
+```
+
+This handles rate limits for free. A **rate limit** (HTTP 429) is the provider telling you that you asked too fast — every account has a ceiling on requests and tokens per minute, and hitting it at scale is normal, not an error in your code. Backoff is exactly the right response: wait, then ask again more slowly. If you would rather not hand-roll retry logic, the [`tenacity`](https://tenacity.readthedocs.io/) library does the same thing with a decorator; the logic is identical.
+
+Now the loop itself. The two ideas that matter are **checkpointing** — write each result to disk immediately — and **resuming** — on startup, read the checkpoint and skip what is already done:
+
+```{python}
+import csv
+import pandas as pd
+from pathlib import Path
+from tqdm.auto import tqdm
+
+df = pd.read_csv("news_paragraphs.csv")     # columns: doc_id, text
+CHECKPOINT = Path("topic_labels.csv")
+
+# --- Resume: find out what is already done ---
+done = set()
+if CHECKPOINT.exists():
+    done = set(pd.read_csv(CHECKPOINT)["doc_id"])
+
+todo = df[~df["doc_id"].isin(done)]
+print(f"{len(done)} already labeled, {len(todo)} to go")
+
+# --- The loop: append one row per document, flush every time ---
+write_header = not CHECKPOINT.exists()
+with CHECKPOINT.open("a", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=["doc_id", "topic", "error"])
+    if write_header:
+        writer.writeheader()
+
+    for row in tqdm(todo.itertuples(), total=len(todo)):
+        try:
+            label = annotate(row.text)
+            writer.writerow({"doc_id": row.doc_id, "topic": label, "error": ""})
+        except Exception as e:
+            writer.writerow({"doc_id": row.doc_id, "topic": "", "error": str(e)})
+        f.flush()                            # the row is on disk *now*
+```
+
+Walk through what each piece buys you. The `tqdm` wrapper gives you a live progress bar with a time estimate — at document 300 you will know whether to expect four hours or nine, and whether something is wrong. The `try/except` inside the loop enforces rule 1: a document whose retries are exhausted becomes a row with an `error` note, not a crash — a to-do list, not a disaster. The `f.flush()` enforces rule 2: if Colab disconnects at document 8,000, the file on disk has 8,000 rows. And the `done` set at the top enforces rule 3: rerun the same cell and it picks up at 8,001. Nothing is repeated, so nothing is paid for twice.
+
+That is the whole trick. Kill it, restart it, run it over three evenings — the checkpoint file does not care.
+
+::: {.callout-tip}
+Key the checkpoint on a **stable document ID**, never on row position. If you re-sort or re-filter the DataFrame between runs, positions change silently and the resume logic mislabels everything. And afterward, always count: the checkpoint should have exactly `len(df)` rows, and `(labels["error"] != "").sum()` tells you how many documents need a second pass — rerun the loop and it will retry exactly those if you drop the failed rows first.
+:::
+
+One more check before trusting the output: the model can disobey the codebook. Even with a one-word instruction, somewhere around document 7,000 a model may answer `"healthcare"` or `"Health."` instead of `"health"`. Validate the labels against the `TOPICS` list and treat anything else as a failure to review — or better, use the structured-output schema from @sec-apis, whose `enum` makes off-codebook answers impossible.
+
+<!-- DRAFT NOTE (Emre): the lost-overnight-run war story goes here — the concrete version (which corpus, how many hours, what the bill was) lands much harder than the probability table. -->
+
+## Parallel calls, in plain terms
+
+The robust loop is still slow, and for a reason worth understanding: almost none of those four hours is computation *on your machine*. Your code spends about 99% of its time waiting for the network. Sequential code is you standing at the restaurant counter, refusing to place order two until order one is in your hands. The kitchen — the provider's servers — is massively parallel and does not care. The fix is to place twenty orders and collect them as they come up. That is all "async" means here: **overlap the waiting.**
+
+The arithmetic is dramatic. At 1.5 seconds per call, 10,000 sequential calls take about 4.2 hours. With 20 calls in flight at once, the same work takes roughly 13 minutes — bounded not by your code but by your account's rate limits.
+
+In Python this is `asyncio`, and the OpenAI client ships an async twin ([Anthropic's client has `AsyncAnthropic`](https://docs.anthropic.com/), same idea):
+
+```{python}
+import asyncio
+from openai import AsyncOpenAI
+
+aclient = AsyncOpenAI(api_key=userdata.get("OPENAI_API_KEY"))
+sem = asyncio.Semaphore(20)          # at most 20 calls in flight
+
+async def annotate_async(doc_id, text):
+    async with sem:
+        r = await aclient.chat.completions.create(
+            model="gpt-5-mini",
+            messages=[{"role": "system", "content": SYSTEM},
+                      {"role": "user", "content": f"Paragraph: '{text}'"}],
+        )
+        return doc_id, r.choices[0].message.content.strip().lower()
+
+async def run_chunk(chunk):
+    tasks = [annotate_async(r.doc_id, r.text) for r in chunk.itertuples()]
+    return await asyncio.gather(*tasks, return_exceptions=True)
+
+# Colab and Jupyter allow top-level await:
+results = await run_chunk(todo.head(200))
+```
+
+The `Semaphore` is the only genuinely new idea: a gate that lets at most 20 calls run concurrently, so you speed up without slamming into rate limits. `gather` collects the results; `return_exceptions=True` keeps one failed task from sinking the rest, which is rule 1 again in async clothing.
+
+::: {.callout-warning}
+Concurrency multiplies everything — including your mistakes. A bug that would have cost you 30 wasted calls in a sequential loop costs 600 before you can hit interrupt. And 20 parallel calls spend money 20 times faster. Keep the discipline from the previous section: process in chunks of a few hundred, checkpoint each chunk to disk before starting the next, and pilot on 100 documents first. Speed is not a reason to abandon the checkpoint file; it is a reason to need it more.
+:::
+
+If this is your first contact with `asyncio`, do not feel obliged to master it. The sequential loop with checkpointing is fast *enough* for most projects — four hours overnight is fine when the alternative is four months of hand-coding. Reach for async when you iterate on prompts and need the turnaround, or skip both and use the option below.
+
+## The overnight option: provider batch APIs
+
+Research workloads have one advantage worth exploiting: you usually do not need the answers *now*. Providers know that live, low-latency responses are the expensive part of their business, so they sell a second tier for workloads like ours. You upload all your requests at once, the provider runs them on idle capacity, and you collect results later — at **half price**.
+
+The [OpenAI Batch API](https://platform.openai.com/docs/guides/batch) offers a 50% discount with results within a 24-hour window. [Anthropic's Message Batches API](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) is the same deal: 50% off, most batches done in under an hour, up to 100,000 requests or 256 MB per batch, results retrievable for 29 days; requests still unprocessed after 24 hours expire unbilled. Recall the cost table from @sec-apis: a 10,000-document annotation job that cost \$33 on a frontier model becomes about \$16.50 for the price of patience. For a job you were going to run overnight anyway, there is no tradeoff left.
+
+The workflow has three steps: build a file of requests, submit it, collect results. Requests go in a **JSONL** file — one JSON object per line, one line per document — and each line carries a `custom_id`, which is how you match answers back to your DataFrame:
+
+```{python}
+import json
+
+# 1. Build the request file from the DataFrame
+with open("batch_input.jsonl", "w") as f:
+    for row in df.itertuples():
+        request = {
+            "custom_id": str(row.doc_id),
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "model": "gpt-5-mini",
+                "messages": [
+                    {"role": "system", "content": SYSTEM},
+                    {"role": "user", "content": f"Paragraph: '{row.text}'"},
+                ],
+            },
+        }
+        f.write(json.dumps(request) + "\n")
+
+# 2. Upload and submit
+batch_file = client.files.create(file=open("batch_input.jsonl", "rb"),
+                                 purpose="batch")
+batch = client.batches.create(
+    input_file_id=batch_file.id,
+    endpoint="/v1/chat/completions",
+    completion_window="24h",
+)
+print(batch.id, batch.status)      # save this id somewhere safe
+
+# 3. Later — possibly hours later — poll and collect
+batch = client.batches.retrieve(batch.id)
+if batch.status == "completed":
+    content = client.files.content(batch.output_file_id)
+    labels = {}
+    for line in content.text.splitlines():
+        rec = json.loads(line)
+        answer = rec["response"]["body"]["choices"][0]["message"]["content"]
+        labels[rec["custom_id"]] = answer.strip().lower()
+
+    df["topic"] = df["doc_id"].astype(str).map(labels)
+```
+
+Two things to notice. Results come back in **no guaranteed order** — the `custom_id` mapping is not a convenience, it is the only correct way to reassemble your data. And the batch `id` printed in step 2 is your claim ticket; write it down, because the notebook that submitted the batch does not need to be the notebook that collects it. Anthropic's client follows the same create–poll–retrieve pattern with `custom_id` matching.
+
+The main tradeoff, beyond waiting: batch endpoints are a proprietary-provider feature. Open-weight models served through OpenRouter generally have no batch tier, so if your project committed to an open model for reproducibility reasons (as @sec-apis discussed), your scaling tools are the loop and async sections above.
+
+My rule of thumb: **iterate live, produce in batch.** Prompt development needs the fast feedback of live calls on a 100-document pilot. The final production run over the full corpus is a batch job — cheaper, and immune to your laptop falling asleep.
+
+<!-- DRAFT NOTE (Emre): opinion slot — whether you actually teach the batch workflow in the workshop or leave it as reading. In class the deferred gratification is awkward (submit, then... wait); maybe describe how you stage the demo. -->
+
+## Validate before you trust
+
+You now have 10,000 labels. You have data the moment you know how good they are — not before. Validation is not a garnish on this workflow; it is the step that turns model output into a measurement you can report. The procedure is the same one content analysis has always used for human coders ([Krippendorff 2011](https://repository.upenn.edu/entities/publication/034a6030-c584-4d14-9d3d-7b7e8d16df20)): draw a random subsample, code it yourself blind to the model's answers, and compute agreement.
+
+By hand first. Suppose you hand-code 10 paragraphs (a real validation sample is a few hundred — this is for arithmetic you can check):
+
+| doc | human | model | agree? |
+|---|---|---|---|
+| 1 | macroeconomy | macroeconomy | ✓ |
+| 2 | macroeconomy | macroeconomy | ✓ |
+| 3 | macroeconomy | health | ✗ |
+| 4 | macroeconomy | macroeconomy | ✓ |
+| 5 | macroeconomy | macroeconomy | ✓ |
+| 6 | macroeconomy | health | ✗ |
+| 7 | health | health | ✓ |
+| 8 | health | health | ✓ |
+| 9 | environment | environment | ✓ |
+| 10 | macroeconomy | macroeconomy | ✓ |
+
+**Percent agreement** is the count of matches over the total: 8/10 = **80%**. Easy to compute, easy to report, and it flatters. Here is why: 7 of your 10 human labels are "macroeconomy." A broken model that answered "macroeconomy" every single time — carrying zero information — would score 70% against this sample. Whenever categories are skewed, and in real corpora they always are, raw agreement is inflated by chance.
+
+**Krippendorff's alpha** discounts that chance agreement: $\alpha = 1 - D_o / D_e$, observed disagreement over the disagreement you would expect if labels were drawn at random from the pooled label distribution. For our table: the observed disagreement is $D_o = 0.20$ (2 mismatches in 10). Pooling both coders' labels (20 values: 12 macroeconomy, 6 health, 2 environment) and counting how often two randomly drawn labels would differ gives $D_e \approx 0.57$. So $\alpha = 1 - 0.20/0.57 \approx$ **0.65**.
+
+Sit with that for a second: a healthy-looking 80% agreement becomes α ≈ 0.65 once chance is discounted — *below* the conventional floor. Krippendorff's customary standards: rely on variables with α ≥ 0.800, and treat 0.667 as the lowest bound for even tentative conclusions. Our toy example would not pass review, and neither would many real annotation runs whose authors only reported percent agreement.
+
+In code, the [`krippendorff`](https://pypi.org/project/krippendorff/) package does the bookkeeping:
+
+```{python}
+# pip install krippendorff
+import numpy as np
+import krippendorff
+
+human = ["macroeconomy", "macroeconomy", "macroeconomy", "macroeconomy",
+         "macroeconomy", "macroeconomy", "health", "health",
+         "environment", "macroeconomy"]
+model = ["macroeconomy", "macroeconomy", "health", "macroeconomy",
+         "macroeconomy", "health", "health", "health",
+         "environment", "macroeconomy"]
+
+cats = {c: i for i, c in enumerate(sorted(set(human + model)))}
+data = np.array([[cats[c] for c in human],
+                 [cats[c] for c in model]])   # coders × documents
+
+print(krippendorff.alpha(reliability_data=data,
+                         level_of_measurement="nominal"))   # ≈ 0.65
+```
+
+Practical guidance for the real thing. Sample a few hundred documents, not a dozen — [Törnberg's (2024) checklist](https://sociologica.unibo.it/article/view/19461) is the reference here — and sample *randomly* from the full corpus, not from the easy cases. Code your sample before looking at the model's labels. If some categories are rare, stratify so they appear in the sample at all. And report the numbers in the paper exactly as you would for a human coding team: sample size, percent agreement, alpha, and how disagreements were adjudicated.
+
+::: {.callout-warning}
+Do not validate on the documents you used while developing the prompt. You tuned the prompt until those cases came out right, so they overstate accuracy the same way training-set performance overstates any model. Hold the validation sample out from day one, and touch it once.
+:::
+
+## Write down what you ran
+
+Six months from now — a revise-and-resubmit later — someone will ask exactly which model produced these labels, with which prompt, at which settings. "The results CSV" answers none of that. So the last habit: every production run writes a **manifest** next to its results, recording everything needed to rerun or retire it. This is the practical half of the reproducibility argument from [Palmer, Smith, and Spirling (2024)](https://www.nature.com/articles/s43588-023-00585-1) — providers deprecate models, and your manifest is the record of what existed when.
+
+```{python}
+import json, datetime, hashlib, openai
+
+manifest = {
+    "task": "policy topic classification, news paragraphs",
+    "corpus": "news_paragraphs.csv",
+    "n_documents": int(len(df)),
+    "model": "gpt-5-mini",
+    "parameters": {},   # every sampling knob you set; the gpt-5 series fixes its own
+    "system_prompt": SYSTEM,
+    "prompt_sha256": hashlib.sha256(SYSTEM.encode()).hexdigest()[:12],
+    "run_date": datetime.date.today().isoformat(),
+    "openai_python_version": openai.__version__,
+    "batch_id": batch.id,          # or None for a live-loop run
+    "validation": {
+        "n": 300,
+        "percent_agreement": 0.84,   # fill in from your validation
+        "krippendorff_alpha": 0.71,
+    },
+}
+
+with open("topic_labels_manifest.json", "w") as f:
+    json.dump(manifest, f, indent=2)
+```
+
+The prompt hash is a small trick worth adopting: when you inevitably run version 2 of the prompt, the hash makes it impossible to confuse which labels came from which wording. Model string, parameters, prompt, date, agreement statistics — that is the whole methods paragraph, pre-written. It costs ten lines once and nothing thereafter.
+
+## In research
+
+What this chapter's pipeline buys you is scale on tasks that were previously capped by coder-hours, at costs capped by the token arithmetic of @sec-apis. Topic-coding decades of news coverage against a Comparative Agendas–style codebook, where a human team codes thousands of stories and an LLM loop codes millions of paragraphs for the price of a conference registration. Stance-coding every immigration speech in a parliament's history rather than one sampled session per year. Theme-tagging tens of thousands of open-ended survey responses that would otherwise be skimmed once and set aside. First-pass coding of interview transcripts against a qualitative codebook, with the researcher auditing the output instead of producing every label. In each case the design is identical: codebook in the system prompt, documents through the loop or the batch endpoint, validation sample coded by hand, agreement reported.
+
+The evidence says this workflow can work — and says so with caveats that map directly onto this chapter's second half. [Gilardi, Alizadeh, and Kubli (2023)](https://www.pnas.org/doi/10.1073/pnas.2305016120) found LLM annotation beating crowd workers on political text tasks at a fraction of the cost, which is why the loop is now standard equipment. But [Ziems et al. (2024)](https://aclanthology.org/2024.cl-1.8/), across 25 computational social science benchmarks, found zero-shot LLMs reaching fair — not perfect — agreement with humans on labeling tasks, without beating fine-tuned classifiers. Fair-but-imperfect is precisely the regime where validation decides whether your measure is publishable, and where α, not percent agreement, is the honest statistic.
+
+The scale itself changes what validation means. When you hand-code 10,000 documents with a team, disagreement surfaces continuously and the codebook gets argued into shape along the way. When a model codes 10,000 documents in an afternoon, that friction disappears — which is efficient, and dangerous. The model applies its misreading of your codebook with perfect consistency across the entire corpus; a systematic error does not announce itself the way a confused RA does. Your validation sample is the only place the announcement can happen. Budget for it as a first-class research activity: the money the batch API saved you is well spent on double-coding a larger holdout.
+
+A last word on proportion. The techniques here — checkpointing, backoff, manifests — are not exciting, and that is the point. They are the difference between "we ran some texts through ChatGPT" and a measurement pipeline another lab can audit, rerun, and extend. The exciting parts of your project live elsewhere: in the codebook, the research design, and what the 10,000 labels let you test. Get the boring parts right once, put them in a script you reuse, and spend your attention where it belongs.
+
+<!-- DRAFT NOTE (Emre): concrete example from your own work here — the narratives/news pipeline, actual n, actual alpha, what the validation caught. This section needs one real number from your research to not read generic. -->
+
+## Further reading
+
+- [OpenAI Batch API guide](https://platform.openai.com/docs/guides/batch) and [Anthropic's Message Batches documentation](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) — the two batch endpoints used in this chapter; check current discounts and limits here, not in this draft.
+- [Krippendorff (2011), "Computing Krippendorff's Alpha-Reliability"](https://repository.upenn.edu/entities/publication/034a6030-c584-4d14-9d3d-7b7e8d16df20) — the short working paper behind the statistic; the [`krippendorff` package](https://pypi.org/project/krippendorff/) implements it.
+- [Törnberg (2024), "Best Practices for Text Annotation with Large Language Models," *Sociologica*](https://sociologica.unibo.it/article/view/19461) — validation and reporting standards for exactly this pipeline.
+- [Gilardi, Alizadeh & Kubli (2023), *PNAS*](https://www.pnas.org/doi/10.1073/pnas.2305016120) and [Ziems et al. (2024), *Computational Linguistics*](https://aclanthology.org/2024.cl-1.8/) — the optimistic and the sobering halves of the evidence on LLM annotation quality.
+- [Palmer, Smith & Spirling (2024), *Nature Computational Science*](https://www.nature.com/articles/s43588-023-00585-1) — why the manifest matters: proprietary models disappear, and your methods section has to survive that.
+- [tenacity](https://tenacity.readthedocs.io/) and [tqdm](https://tqdm.github.io/) — the two small libraries that make robust loops pleasant; both do in one line what this chapter builds by hand.

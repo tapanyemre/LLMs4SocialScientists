@@ -1,0 +1,169 @@
+# The Logit Lens {#sec-logit-lens}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Everything you have done with a language model so far treats it as an informant you can only hear speak. You send a prompt, you get an answer, and the entire process between the two is invisible. Social scientists know this situation well. An interview transcript gives you what the informant *said*; it does not give you the path from question to answer — the first hunch, the discarded alternative, the moment the response settled. We have a whole methodological vocabulary for that gap: process versus product, stated reasoning versus actual reasoning, the snap reaction versus the considered account.
+
+The logit lens is the first tool in this book that closes some of that gap for a model. It lets you stop a model mid-computation, at every layer, and ask: *what are you leaning toward right now?* The answer, it turns out, is not sitting in the input waiting to be printed. You can watch it form — a vague guess early, the right neighborhood in the middle, the specific answer locking in near the top. This chapter shows you the trick (it is one trick), works it by hand, runs it in code, and then walks through one of the most striking findings it has produced: evidence that multilingual models may pass through something English-shaped on their way to an answer in French or Chinese. That finding — and its honest caveats — previews what observation inside a model can and cannot tell you.
+
+## One trick: use the last step early
+
+Recall the picture from @sec-transformers. Every layer of the model reads from and writes to the residual stream — the running notes on your sentence. Nothing is erased; each layer adds. And the model's final step is almost anticlimactic: take the notes at the last position, multiply by one matrix — the **unembedding matrix** — to get a score (a *logit*) for every token in the vocabulary, and softmax those scores into a probability distribution. That distribution is the model's answer.
+
+Here is the whole idea of the logit lens: *the final step does not know it is the final step.* It is just a matrix. Nothing stops you from taking the notes as they stand after layer 5, or layer 17, and pushing them through that same matrix. Do it at every layer and you get a sequence of next-token distributions — the model's draft answer at every depth.
+
+The idea comes from a pseudonymous 2020 blog post, [interpreting GPT: the logit lens](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens) — cite it as nostalgebraist (2020); the author publishes under no other name, and the post founded a method anyway. Reading it is still worthwhile; its companion Colab, now over half a decade old, predates the current tooling. Read the post, run the modern code below.
+
+What does the lens show? The canonical example, which David Bau's [interpretability course](https://neural-mechanics.baulab.info) uses in its first week, is the prompt *"Miles Davis plays the ___"*. Read the model's per-layer guess at the blank, bottom to top, and you get a ladder something like:
+
+> thing → jazz → horn → trumpet
+
+Early layers hold a syntactically fine, semantically empty guess: some *thing* is played. Middle layers retrieve the domain: this is about *jazz*. Later layers narrow to the category — a *horn* — and only near the top does the answer sharpen to *trumpet*. The model did not look up "trumpet." It built it, across depth. Once you have seen one of these ladders, the residual-stream picture stops being an architecture diagram and becomes something closer to a field site.
+
+<!-- DRAFT NOTE (Emre): your SICSS-Istanbul framing — "ethnography of a mind mid-thought," the informant's snap reaction vs. considered account — could open or close this section in your own words. The talk's Phase 4 Beat C script has the exact phrasing. -->
+
+## The logit lens by hand
+
+No new machinery is needed — that is the point of the method — but it is worth doing once with numbers small enough to check on paper.
+
+Take a model with a 2-dimensional residual stream and a 4-word vocabulary: *the*, *thing*, *jazz*, *trumpet*. The unembedding matrix has one column of 2 numbers per vocabulary word. I invented these; read the first dimension loosely as "a concrete object" content and the second as "music" content. (The usual honesty note applies: real dimensions do not come labeled. That is what this whole part of the book is about.)
+
+| Word | $d_1$ (object) | $d_2$ (music) |
+|---|---|---|
+| the | −1.0 | 0.0 |
+| thing | 1.0 | −0.5 |
+| jazz | −0.3 | 1.0 |
+| trumpet | 1.0 | 0.8 |
+
+The columns make intuitive sense: *thing* is an object with no music content, *jazz* is musical but not an object, *trumpet* is both, *the* is neither. Unembedding a residual state $h$ means taking its dot product with each column — exactly the similarity operation from @sec-embeddings.
+
+Now run "Miles Davis plays the ___" through a 3-layer model and record the notes at the final position after each layer. Remember the stream is additive — each layer writes on top of what is there:
+
+| After layer | Residual state $h$ | What the layer wrote |
+|---|---|---|
+| 1 | (0.7, −0.3) | "a concrete noun comes next" |
+| 2 | (0.0, 1.2) | (−0.7, +1.5): music content, retrieved from *Miles Davis* |
+| 3 | (0.8, 1.2) | (+0.8, 0.0): back to an object — a played *instrument* |
+
+Apply the final step to each row. Dot products first — check one yourself: after layer 2, the score for *jazz* is $0.0 \times (-0.3) + 1.2 \times 1.0 = 1.20$. Then softmax each row into probabilities, just as in @sec-neural-networks:
+
+| After layer | the | thing | jazz | trumpet | Top guess |
+|---|---|---|---|---|---|
+| 1 | 0.10 | **0.47** | 0.12 | 0.32 | *thing* |
+| 2 | 0.13 | 0.07 | **0.44** | 0.35 | *jazz* |
+| 3 | 0.04 | 0.12 | 0.26 | **0.58** | *trumpet* |
+
+There is the ladder: *thing* → *jazz* → *trumpet*. And notice two things the probabilities add beyond the ladder. The middle guess is in the right neighborhood but not confident — 0.44, with *trumpet* close behind — which is typical of real middle layers. And the final answer is not certain either: 0.58. The lens reads out a distribution at every depth, not just a winner, and the sharpening of that distribution is as informative as the sequence of winners.
+
+That is the entire method. We trained nothing, added nothing, changed nothing. We borrowed the model's own last step and used it early.
+
+## In code
+
+You can do this on a real model in a Colab notebook in about ten lines, using [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens), a library built for exactly this kind of poking (@sec-huggingface covers the general model-loading ecosystem it sits on). We will use GPT-2 small — 12 layers, 124M parameters, old and well understood, which is what you want for a first look. One version note: TransformerLens 3 introduced a newer `TransformerBridge` loading interface, and the library now marks the `HookedTransformer` API below as legacy — but it remains supported, and it is the interface you will meet in nearly all existing interpretability code and tutorials, so it is the right one to learn first.
+
+```{python}
+# In Colab, first run: %pip install transformer_lens
+import torch
+from transformer_lens import HookedTransformer
+
+model = HookedTransformer.from_pretrained("gpt2")   # 12 layers
+
+prompt = "The European Union has its headquarters in the city of"
+tokens = model.to_tokens(prompt)
+with torch.no_grad():
+    logits, cache = model.run_with_cache(tokens)
+
+print(model.to_string(logits[0, -1].argmax()))       # the model's final answer
+```
+
+`run_with_cache` stores every intermediate activation, including the residual stream after each layer. The logit lens is then a loop: take the notes at the final position after each layer, push them through the model's own unembedding, and read the top guesses.
+
+```{python}
+last = tokens.shape[1] - 1    # the position that predicts the blank
+
+# The residual stream after each layer. apply_ln=True runs the final
+# LayerNorm first — the unembedding expects normalized input, and
+# skipping this step is the classic way to get garbage.
+resid, labels = cache.accumulated_resid(
+    layer=-1, apply_ln=True, return_labels=True
+)
+
+for label, h in zip(labels, resid[:, 0, last, :]):
+    layer_logits = h @ model.W_U + model.b_U         # the borrowed last step
+    top = layer_logits.softmax(dim=-1).topk(3)
+    guesses = ", ".join(
+        f"{model.to_string(i)!r} ({p:.2f})"
+        for p, i in zip(top.values, top.indices)
+    )
+    print(f"{label:>12}  {guesses}")
+```
+
+Read the printout top to bottom as depth. The shape to expect — and it is a shape, not an exact transcript; your token-by-token output will vary with the prompt — is the one from the by-hand exercise: early layers produce noise or generic filler, somewhere in the upper half of the stack a plausible answer appears with low probability, and in the last few layers it locks in and the probability climbs. On some prompts GPT-2 small resolves the answer only in the final layer or two; that is a finding about the prompt, not a bug.
+
+Three prompts worth trying, from easiest to most interesting:
+
+1. **`The opposite of hot is`** → *cold*. Semantically forced; the answer tends to appear surprisingly early. A guess that forms fast.
+2. **`The European Union has its headquarters in the city of`** → *Brussels*. A retrieval-style fact; watch where it surfaces and how confidence builds.
+3. **`The capital of the country whose flag has a red maple leaf is`** → *Ottawa*. Two hops: flag → Canada → capital. On models that manage it, you can sometimes catch *Canada* in the middle layers before the top resolves to *Ottawa* — an intermediate belief, visible. GPT-2 small will likely fail this one; try `"gpt2-xl"` in the code above, or a larger open model.
+
+::: {.callout-tip}
+Good lens prompts are cloze tests: fill-in-the-blank sentences where *you* know the answer, so the model has one right target to converge on. And a prompt the model gets *wrong* is the most interesting kind — the lens shows you whether the wrong answer was there from the start or displaced a right one late. Keep a note of where (which layer) each of your prompts resolves; that number is data.
+:::
+
+Two practical boundaries. First, this method needs the model's weights. You cannot point a logit lens at Claude or GPT-5 through an API — the residual stream is simply not exposed; the most an API will give you is log probabilities over the *final* distribution (@sec-apis shows how). This is why interpretability research runs almost entirely on open-weight models, and why the findings below come from Llama- and GPT-2-class systems. Second, if you want this with no code at all: the [NDIF Workbench](https://workbench.ndif.us) from David Bau's lab at Northeastern is a purpose-built logit-lens interface — type a prompt, get the per-layer heatmap on a hosted Llama-3.1-8B. It needs a free account (one-click via GitHub or Google), and it runs on [nnsight](https://nnsight.net/), the same library you would use for remote-execution research on models too big for your GPU. Read the heatmap row of your final token left to right: pale early cells, the answer appearing, the answer locking in.
+
+<!-- DRAFT NOTE (Emre): your SICSS-Istanbul workshop story belongs here — the room running "The Galata Tower is in the city of ___" on the Workbench and watching the model hold "Gal" through the middle layers before "Istanbul" resolves late. The reading-guide slide from the talk outline has the beats. -->
+
+## What the lens found: does the model think in English?
+
+A method this simple should not find anything deep. Here is what it found.
+
+[Wendler et al. (2024)](https://arxiv.org/abs/2402.10588), in a paper titled *Do Llamas Work in English?*, pointed the logit lens at Llama-2 models running prompts in French, Chinese, German and other languages — translation tasks and cloze completions where the correct answer was a non-English word. The final layers, as expected, produce the answer in the prompt's language. But in the middle layers, the lens frequently decodes the *English* version of the answer first. Ask for the French word and the draft passes through the English one on its way there.
+
+The headline version — "multilingual models think in English" — is stronger than what the paper claims, and the authors are careful. Their reading is that the middle layers operate in an abstract *concept space* that lies closer to English than to other languages, plausibly because English dominates the training data. And there is a rival explanation to keep on the table: the lens reads intermediate states through the model's output vocabulary, and that vocabulary is itself English-heavy — so some of the "English detour" may be an artifact of the measuring instrument rather than a fact about the computation. Later work with different tools points the same general direction while complicating it: Anthropic's circuit analysis of Claude 3.5 Haiku ([Lindsey et al. 2025](https://transformer-circuits.pub/2025/attribution-graphs/biology.html)) found genuinely language-independent concept features in the middle layers, alongside evidence that English functions as a mechanistic default — on selected prompts, in one model.
+
+Hold both halves of this: a two-line observational method produced a substantive, publishable claim about how multilingual systems represent meaning — and the claim is still contested, partly *because* the method is observational. That is the texture of this field, and it should feel familiar; it is the texture of any field whose instruments are young.
+
+## The tuned lens: calibrating the instrument
+
+The raw logit lens has a known defect: it is biased and uneven. It works well on GPT-2, less well on other model families — for some, the early- and middle-layer readouts are close to useless — and within a model it is more trustworthy at some layers than others. The reason is the borrowed instrument itself. Each layer writes to the residual stream in its own basis, its own conventions; the unembedding matrix was trained to read the *final* layer's conventions, and there is no guarantee earlier layers speak the same dialect.
+
+[Belrose et al. (2023)](https://arxiv.org/abs/2303.08112) proposed the fix: the **tuned lens**. Instead of using the final unembedding raw at every layer, train a small affine translator *per layer* — a lightweight map from that layer's dialect into the final layer's — and unembed after translating. The tuned readouts are markedly less biased and track the model's eventual output far better, across families where the raw lens fails. (There is a [hosted demo](https://huggingface.co/spaces/AlignmentResearch/tuned-lens), though community Spaces sleep; the paper's figures make the point on their own.)
+
+The methodological trade will be familiar. The raw lens is the model's own map, untouched — maximally honest, sometimes unreadable. The tuned lens is calibrated — more accurate, but now *you trained something*, and a trained probe can learn to read out information the model itself never uses. That worry has a history: [Alain and Bengio (2016)](https://arxiv.org/abs/1610.01644) introduced probing classifiers, and the caveat came with them — information being *accessible* in a layer does not show the model *uses* it. Choosing between a crude instrument you fully understand and a calibrated one with its own degrees of freedom is not a new problem for social scientists.
+
+## A reading, not a proof
+
+Three caveats, and they are the bridge to the rest of this part of the book. Say them to yourself every time a heatmap surprises you.
+
+**The instrument is borrowed.** The unembedding matrix was trained to read the final layer. Pointing it at layer 6 produces *a* reading of layer 6 — suggestive, often stable, sometimes replicated by better instruments — but it is not a transcript of what layer 6 "contains." The tuned lens softens this; it does not remove it.
+
+**Decodable is not used.** Even a perfectly calibrated readout only shows that some information is linearly extractable at a layer. Bau's course makes the point with a probe that reads vowel counts from activations with high accuracy — information that is *there* without any evidence the model's computation ever consults it. Accessible ≠ causally used.
+
+**Watching is not intervening.** Seeing *Canada* light up at layer 14 on the way to *Ottawa* does not prove the *Canada* representation caused the answer. It is a correlation across depth. As Bau's course puts it: "Logit lens generates striking observations. But observations are not explanations." To turn a lens reading into a causal claim you have to reach in and change something — swap the intermediate state, ablate it, patch it from another run — and see whether the behavior follows. That is activation patching (@sec-activation-patching), where this book's observation chapters hand off to its intervention chapters. You describe before you manipulate; but description alone settles nothing causal.
+
+::: {.callout-warning}
+The lens demos in this chapter run on GPT-2-class and Llama-class open models. The *phenomenon* — answers forming gradually across depth — shows up consistently in the open models researchers have examined. But be careful transferring specific findings ("facts resolve around layer X," "the middle layers pivot through English") to frontier systems nobody outside a lab can open. A reading of a small model is evidence about the small model.
+:::
+
+## In research
+
+The most immediate payoff for social scientists is as an *audit instrument for multilingual measurement*. If you use LLMs to code stance in Turkish parliamentary debate, frames in Arabic news, or open-ended survey answers in Spanish — and much of computational social science outside the Anglosphere now does — the Wendler et al. finding is a construct-validity question aimed directly at your pipeline: is the model coding *laiklik* through a concept space shaped by English-language text about *secularism*? Those are not the same concept, as any Turkish politics scholar will tell you. The logit lens gives you a cheap first diagnostic: run your actual coding prompts through an open model, decode the middle layers, and see whether the English detour happens on your material. It will not settle the question — the caveats above apply in full — but it turns a vague worry about "cultural bias" into an observable, reportable pattern, which is more than prompt-and-pray offers.
+
+Second, the lens makes *process* available where research designs previously had only *product*. Work that simulates survey respondents with persona prompts, for instance, currently validates outputs against human marginals and stops there. The lens lets you ask a sharper question: when a model answers as "a 60-year-old rural conservative," does that answer appear in the earliest layers — a stereotype-shaped prior, retrieved before the question is fully processed — or does it form late, integrating the question's content? Nobody should publish that reading as a finding on its own; the honest sentence in the paper is "a reading, not a proof." But hypothesis generators are how young instruments earn their place, and the depth at which an answer stabilizes is a recordable quantity you can compare across prompts, personas, and models.
+
+Third, the lens changes what "the model got it wrong" means in an annotation pipeline built on open weights. A misclassification is no longer a black-box event: you can look at whether the wrong label was locked in from the early layers (the model never had it) or displaced a correct intermediate guess near the top (the model had it and overrode it). Those two failures suggest different fixes — better examples in the prompt versus a different model — and distinguishing them takes ten lines of code you now have. This is the general shape of what interpretability offers social science, and it is the shape of this part of the book: observation first, because it is cheap and generative; then causal intervention (@sec-activation-patching), because observation is never enough.
+
+<!-- DRAFT NOTE (Emre): your opinion belongs here — how far you think lens-style audits should go in an actual methods section today (footnote? robustness appendix? not yet publishable?). The book has been careful; this is the natural place for your own stance. -->
+
+## Further reading
+
+- [interpreting GPT: the logit lens](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens) — nostalgebraist (2020). The founding post: readable, exploratory, honest about what it does and does not show. The code section above stands in for its dated Colab.
+- [Eliciting Latent Predictions from Transformers with the Tuned Lens](https://arxiv.org/abs/2303.08112) — Belrose et al. (2023). The calibrated upgrade, and a model of how to criticize your own instrument.
+- [Do Llamas Work in English?](https://arxiv.org/abs/2402.10588) — Wendler et al. (2024), ACL. The multilingual finding, with the concept-space framing stated carefully.
+- [On the Biology of a Large Language Model](https://transformer-circuits.pub/2025/attribution-graphs/biology.html) — Lindsey et al. (2025). The multilingual case study is the relevant section here; the rest previews @sec-circuits.
+- [Understanding intermediate layers using linear classifier probes](https://arxiv.org/abs/1610.01644) — Alain and Bengio (2016). Where the accessible-versus-used caveat comes from.
+- [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens) and [nnsight](https://nnsight.net/) — the two libraries for this kind of work; the second powers the no-code [NDIF Workbench](https://workbench.ndif.us).
+- [A Primer on the Inner Workings of Transformer-based Language Models](https://arxiv.org/abs/2405.00208) — Ferrando et al. (2024). The survey to read when you want the full menu of observation methods, of which the lens is the simplest.

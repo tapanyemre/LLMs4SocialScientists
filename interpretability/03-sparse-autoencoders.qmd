@@ -1,0 +1,166 @@
+# Sparse Autoencoders and Features {#sec-sparse-autoencoders}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have built the classifier this book has been circling for several chapters: a language model that reads parliamentary speeches and labels them *populist* or *not populist*. It agrees with your hand-coders often enough to be useful. Now a reviewer asks the question you should have asked yourself: *what is it actually reading?* Is it detecting anti-elite rhetoric — the construct you care about — or has it learned a shortcut: informal register, short sentences, certain party names? Behavioral tests help, but they poke the box from outside. The direct move is to look at what concepts light up inside the model while it reads.
+
+@sec-logit-lens read the model's *answer* as it formed, layer by layer. This chapter is about reading the model's *vocabulary of concepts* — and it starts with a failure. The obvious unit of analysis, the neuron, turns out to be the wrong unit, for a reason with a name: superposition. The fix, the sparse autoencoder, unmixes the model's internal activity into thousands of readable **features**. You will read some yourself in the hands-on, in a browser, no code — and discover that reading them is a research activity you already know how to do, with validity problems you already know how to worry about.
+
+## The obvious plan, and why it fails
+
+Here is the plan any of us would try first. A transformer's residual stream — the running-notes vector from @sec-transformers — has a few thousand dimensions. Treat each dimension, each *neuron*, as a variable in your dataset. Feed the model text, record when each neuron fires, and build a codebook: neuron 1,204 means immigration, neuron 88 means anger, and so on. Then auditing the populism classifier is just reading off which variables were active.
+
+People tried this. It fails, and it fails in an instructive way. Most neurons turn out to be **polysemantic**: one neuron fires for several unrelated things. The caricature I use in talks — one wire carrying dogs, Tuesdays, and sarcasm — is barely an exaggeration. In the study that motivated this chapter's method, [Bricken and colleagues (2023)](https://transformer-circuits.pub/2023/monosemantic-features/index.html) describe a neuron in a small model that responds to academic citations, English dialogue, HTTP requests, and Korean text. There is no concept that list is a category of. The neuron is not a variable in any codebook a human would write.
+
+Why would a model organize itself this way? The leading account is **superposition** ([Elhage et al. 2022](https://transformer-circuits.pub/2022/toy_model/index.html)): the model has far more concepts to track than dimensions to store them in, so it packs them in anyway. Recall from @sec-embeddings that a concept, in these systems, is a *direction* in a vector space — not a single coordinate. A space with $d$ dimensions has room for only $d$ directions at perfect right angles, but vastly more that are *almost* at right angles. And since concepts rarely co-occur — most sentences are not about dogs *and* Tuesdays *and* sarcasm at once — the interference from sharing space is a price worth paying, and training finds the packing. The result: every concept is smeared across many neurons, and every neuron serves many concepts. One caveat before we lean on this: Elhage and colleagues demonstrated superposition cleanly in small toy models built for the purpose; for frontier-scale models it is the motivating hypothesis with accumulating evidence, not a closed case.
+
+The consequence is practical. You cannot read the model neuron by neuron for the same reason you cannot understand an orchestra microphone by microphone when every microphone picks up every instrument. The unit you want is the instrument. So: unmix.
+
+## Superposition by hand
+
+Small numbers first. Imagine a toy model with a residual stream of just **two** neurons, which needs to track **three** concepts relevant to our parliamentary speeches: *anti-elitism*, *immigration*, and *formality*. Three concepts do not fit at right angles in two dimensions, so the model spaces them as evenly as it can — 120° apart:
+
+| concept | neuron 1 | neuron 2 |
+|---|---|---|
+| **anti-elitism** | 1.00 | 0.00 |
+| **immigration** | −0.50 | 0.87 |
+| **formality** | −0.50 | −0.87 |
+
+Each row is a direction of length 1 (up to rounding). Take dot products between any two rows and you get about −0.5: not orthogonal, but as spread out as three directions in a plane can be. That −0.5 is the *interference* — the price of the packing.
+
+Now the model reads a sentence that is strongly anti-elite (strength 0.8) and moderately about immigration (strength 0.6). Its internal state is the sum of the two concept directions, scaled:
+
+$$
+0.8 \times (1.00,\ 0.00) + 0.6 \times (-0.50,\ 0.87) = (0.80 - 0.30,\ 0.52) = (0.50,\ 0.52)
+$$
+
+Suppose all you can see is what the neurons report: neuron 1 reads 0.50, neuron 2 reads 0.52. What does neuron 1 *mean*? By construction it fires positively for anti-elitism, negatively for both other concepts — a polysemantic mess. Nothing in $(0.50, 0.52)$ announces "this sentence is anti-elite and about immigration." The information is fully present — we just computed it from the concept strengths — but it is not *readable* neuron by neuron. That is superposition in two dimensions. In a real model it is the same situation with a few thousand neurons and (by hypothesis) many tens of thousands of concepts.
+
+## Unmixing: the sparse autoencoder
+
+A sparse autoencoder (SAE) is a small second network trained to do one job: rewrite the model's internal state as a combination of a *larger* set of directions — the **dictionary** — with as few of them active as possible. Two demands, in tension:
+
+1. **Reconstruction:** the active dictionary entries, weighted and summed, must add back up to the original activation vector. Don't lose information.
+2. **Sparsity:** as few entries active as possible for any given input. A penalty on activity forces the network to explain each state with a handful of directions, not all of them.
+
+The bet built into demand 2 is a bet about language: any single sentence is about a few things, not everything at once. If that is true, and if the dictionary directions line up with the model's real concepts, then the sparse rewrite is readable where the raw neurons were not.
+
+Watch it work on our toy example. Give the SAE a dictionary of three entries and let it find the three concept directions (this is what training recovers in toy settings). Now hand it the state $(0.50, 0.52)$ and ask: which non-negative, sparse combination of dictionary entries reconstructs this? With three directions in two dimensions there are three candidate pairs:
+
+| candidate pair | coefficients required | admissible? |
+|---|---|---|
+| anti-elitism + immigration | 0.8 and 0.6 | ✓ both positive |
+| anti-elitism + formality | 0.2 and −0.6 | ✗ negative |
+| immigration + formality | −0.2 and −0.8 | ✗ negative |
+
+Check the winner: $0.8 \times (1.00, 0.00) + 0.6 \times (-0.50, 0.87) = (0.50, 0.52)$. Exactly the state, and exactly the concept strengths we mixed in. The two constraints did the work: non-negativity — features fire or stay silent; they do not anti-fire — killed two of the three candidates, and sparsity would break any remaining ties by preferring fewer active entries. The output is a sentence a human can read: *feature 1 (anti-elitism) active at 0.8, feature 2 (immigration) active at 0.6, feature 3 silent.* The same information as $(0.50, 0.52)$, in a legible coordinate system.
+
+Do the arithmetic for the second candidate pair yourself — two equations, two unknowns — and confirm the −0.6. After that, "sparse autoencoder" stops being an incantation: it is a change of variables, from the neuron basis you cannot read to an overcomplete concept basis you might be able to.
+
+At real scale this worked better than the field expected. Bricken and colleagues ([2023](https://transformer-circuits.pub/2023/monosemantic-features/index.html)) pulled over 4,000 largely interpretable features out of a 512-neuron layer of a deliberately small one-layer model — features for DNA sequences, legal text, Hebrew. A year later, [Templeton and colleagues (2024)](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html) scaled the method to a production model, Claude 3 Sonnet, extracting millions of features — including ones as specific as the Golden Gate Bridge, code bugs, and sycophantic praise. Each **feature** comes with two things: a direction in activation space, and the corpus evidence for it — the text snippets where it fires hardest. That second thing is what you are about to work with.
+
+::: {.callout-warning}
+Two honesty notes before the hands-on. First, SAEs are *lossy*: the reconstruction never adds back up perfectly, so the feature description is an approximation of what the model is doing, not a lossless translation. Second, the dictionary size is a dial you choose, and the concepts change as you turn it — train a bigger SAE and one "immigration" feature may split into finer ones (asylum, border enforcement, labor migration), a documented phenomenon called *feature splitting* ([Bricken et al. 2023](https://transformer-circuits.pub/2023/monosemantic-features/index.html)). There is no single true codebook in the model waiting to be found, only more and less useful resolutions — the way there is no single true number of clusters in a k-means. Treat a feature inventory as an instrument with settings, not as anatomy.
+:::
+
+## Hands-on: reading features on Neuronpedia
+
+This section needs no code, no installation, no account. [Neuronpedia](https://www.neuronpedia.org/) is a browser interface to open SAE features — dashboards for individual features, search over millions of them, and live inference against a real open model (Gemma-2-2B, via the [Gemma Scope](https://www.neuronpedia.org/gemma-scope) SAE release). If @sec-huggingface was your first time running a model, this is your first time walking around inside one.
+
+<!-- DRAFT NOTE (Emre): this walkthrough is the "Guess Which Feature Fired" beat from the SICSS-Istanbul webinar — the chat-guessing game and what the audience actually guessed would make a good opening story here. -->
+
+The exercise has a rule, and the rule is the lesson: **read the evidence before the verdict.**
+
+1. Open this feature dashboard: [neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12082](https://www.neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/12082). At the top is an automatically generated label for the feature. *Do not read it yet.* Scroll straight down to the panel called **Top Activations**.
+2. Top Activations is the feature's evidence: real text snippets, drawn from a large corpus, where this feature fired hardest — with the triggering tokens highlighted, color intensity showing strength. Read ten or fifteen snippets. Ask the question a coder asks: *what do these excerpts have in common?*
+3. Write down a label — one phrase.
+4. Now scroll up and read the auto-generated label. (This one is a feature about dogs — dogs as pets, specifically. If your label was in that neighborhood, you and the machine coder agree.)
+5. Look at two more panels. **Positive/Negative Logits** shows which output words the feature pushes the model toward or away from when it fires — its downstream effect on what gets said next. **Activation Density** shows how rarely it fires at all — the sparsity from the last section, as a histogram.
+6. Now the check that separates browsing from research: the **Test** box. Type your own sentence containing the concept and run it; watch which tokens light up. Then a sentence *without* the concept; confirm the feature stays dark. You have just run a positive and a negative test of the label.
+
+Then make it yours. Neuronpedia's search works two ways: by meaning — type a concept from your own research (*elections*, *borders*, *protest*, *corruption*) to search the feature labels — or by inference: paste a sentence from your actual corpus, a manifesto line, a survey open-end, and see which features fire on it. Pick one feature relevant to something you study and put it through steps 2–6. Then try to break it: find a sentence where the label says the feature should fire and it does not, or the reverse. If you find one — and you often will — you have learned the label's boundary, which is worth more than the label.
+
+One more thing the platform lets you do: [steering](https://www.neuronpedia.org/steer/gemma-2-2b). Pick a feature, clamp its activation high, and generate text: the concept invades the output — ask a cat-steered model about its weekend plans and the weekend fills with cats. This is the mechanism behind Anthropic's [Golden Gate Claude](https://www.anthropic.com/news/golden-gate-claude) demo, where clamping a single "Golden Gate Bridge" feature made Claude bring every conversation back to the bridge, with no change to any prompt. Why it matters here: steering is the *causal* test of a feature interpretation. Reading activating examples shows the feature correlates with a concept; turning it up and watching behavior change shows the direction does work in the system. @sec-activation-patching builds the whole intervention toolkit on that distinction. One caveat: the demo features are curated. Not every feature steers that cleanly.
+
+## Feature labeling is qualitative coding
+
+Step back and name what you did in steps 2 and 3. You read a set of excerpts, asked what they had in common, and assigned a category. That is not *like* qualitative coding. It *is* qualitative coding — open coding of a corpus of excerpts, exactly as you would code interview transcripts. The auto-generated label is one coder's pass (the coder happens to be an LLM shown the same excerpts). Your independent label against the auto-label is an inter-rater reliability check. The test box is deviant-case analysis. Every methodological instinct you have trained for text data transfers to this object.
+
+Which means the validity risks transfer too — all of them:
+
+- **The evidence is the extreme tail.** Top Activations shows where the feature fires *hardest*. Labeling from the tail is coding a theme from only its most vivid quotes; the feature's behavior in its ordinary range may be broader or blurrier than the label suggests.
+- **The label is a reading, not a proof.** A category that fits the excerpts you saw is a hypothesis about the excerpts you did not see. Without negative-case testing, it is one plausible story.
+- **Labels can be actively wrong, not just fuzzy.** [Li and colleagues (2025)](https://arxiv.org/abs/2505.16004) show that SAE concept representations are not adversarially robust: tiny adversarial tweaks to the input text can drive an interpretable feature's activation up or down while barely disturbing the underlying model's own activations. An instrument that can be steered away from what it claims to measure has a construct validity problem — the same problem, formally, as a survey item that respondents can see through.
+- **Correlation is not use.** Even a well-labeled feature that reliably fires on anti-elite rhetoric might not be what *drives* the model's populism classification. Establishing that requires intervention — the business of @sec-activation-patching.
+- **The streetlight.** A critique you will hear inside the field itself: we understand the features that are easy to see — concrete nouns, named entities, languages — and much less about whatever the model is doing that does not resolve into tidy dashboards. Any inventory built from legible features oversamples the legible.
+
+::: {.callout-tip}
+A working protocol, translated from the qualitative methods you already trust: label from the evidence before reading anyone else's label; check agreement with the auto-label and record disagreements rather than resolving them silently; test the label with fresh positive *and* negative cases in the Test box; and report features you could not label alongside the ones you could. If a claim about a feature is doing real work in your argument, the standard is the same as for any coding scheme: a second coder, and a reliability number.
+:::
+
+<!-- DRAFT NOTE (Emre): the "this is thick description / the auto-label is one coder, the audience is inter-rater reliability" framing is your SICSS talk punchline — worth making the personal case here for why you think interpretability is quietly re-inventing qualitative methods, and what social scientists should do about it. -->
+
+## In code (optional)
+
+Everything above ran in a browser. When you need the same thing programmatically — scoring your *own* corpus against a feature, or finding which features fire across a thousand speeches instead of one — the [`sae-lens`](https://github.com/jbloomAus/SAELens) library loads the same Gemma Scope SAEs that Neuronpedia displays ([Lieberum et al. 2024](https://arxiv.org/abs/2408.05147)). The recipe: run the model, take the residual stream at the layer the SAE was trained on, and pass it through the SAE's encoder.
+
+```{python}
+# In Colab (GPU runtime): %pip install sae-lens
+# google/gemma-2-2b is gated: accept the license on its Hugging Face
+# page, then authenticate with huggingface_hub.login() first.
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from sae_lens import SAE
+
+# The same feature family the Neuronpedia dashboards show:
+# Gemma Scope, residual stream after layer 20, 16k features
+sae = SAE.from_pretrained(
+    release="gemma-scope-2b-pt-res-canonical",
+    sae_id="layer_20/width_16k/canonical",
+)
+
+tok = AutoTokenizer.from_pretrained("google/gemma-2-2b")
+model = AutoModelForCausalLM.from_pretrained(
+    "google/gemma-2-2b", torch_dtype=torch.bfloat16, device_map="auto"
+)
+sae = sae.to(model.device)  # the SAE loads on CPU; move it next to the model
+
+text = "This government has abandoned ordinary people to serve a corrupt elite."
+inputs = tok(text, return_tensors="pt").to(model.device)
+with torch.no_grad():
+    out = model(**inputs, output_hidden_states=True)
+
+# hidden_states[0] is the embedding layer, so the residual
+# stream after layer 20 is index 21
+resid = out.hidden_states[21].float()
+
+feature_acts = sae.encode(resid)              # (1, n_tokens, 16384)
+peak = feature_acts.max(dim=1).values.squeeze(0)  # strongest firing per feature
+top = peak.topk(5)
+for fid, act in zip(top.indices.tolist(), top.values.tolist()):
+    print(f"{act:6.1f}  neuronpedia.org/gemma-2-2b/20-gemmascope-res-16k/{fid}")
+```
+
+The printed links take you back to each feature's dashboard, so the loop is: code finds the features, you read and judge the evidence. Almost all 16,384 features will be exactly zero for any sentence — sparsity again, now in your own output. One warning: `sae-lens` is young and its API moves (older versions returned a tuple from `SAE.from_pretrained`). If a line errors, check the current docs before assuming the idea is broken.
+
+## In research
+
+The nearest-term payoff is the one this chapter opened with: **auditing what concepts a model uses when it processes political text.** Today, when you report an LLM-based measurement of populism, frames, or stance, the validation is entirely behavioral — agreement with human coders on a test set. Features add an internal check. Run your speeches through an open model with a trained SAE and ask: when the classifier fires on a speech, which features are active? If features you would label *anti-elite rhetoric* and *popular sovereignty* light up, construct and mechanism agree. If the strongest active features track a speaker's party, region, or informal register, you have found a shortcut — the model version of a coder who "knows" the answer from the letterhead. That is a discovery about your instrument that no held-out accuracy number can give you.
+
+The second payoff runs the audit in reverse: the model's feature inventory as an *object* of study. Kozlowski, Taddy and Evans ([2019](https://journals.sagepub.com/doi/10.1177/0003122419877135)) measured culture by building axes in embedding space — but they chose the axes (*rich − poor*, *man − woman*) from theory. An SAE hands you the dimensions the model itself formed under training pressure: which distinctions among political actors, groups, and events the training corpus made worth representing. What features exist about immigrants, about protesters, about welfare recipients — and what fires alongside them? Since the training corpus is a large sample of written culture, the model's learned codebook is a cultural artifact, and reading it is a computational cousin of studying a society's classification systems. That research is barely begun, which for a graduate student is the good news.
+
+Interpretability-as-method is also arriving through social science's front door. Ma ([2026](https://doi.org/10.1177/00811750261421220), *Sociological Methodology*) treats gender, age, and framing as directions in a model's activation space, orthogonalizes them to isolate each construct, and injects controlled perturbations to test their causal effect on the model's simulated decisions — explicitly framed as moving beyond treating LLMs as black boxes. A methods journal of record is telling the discipline that internal representations are now part of the measurement conversation. SAE features are the observational half of that program; the interventional half is the next two chapters.
+
+Temper all of this with the state of the field. SAE findings are strongest on small open models; whether the approach scales cleanly to frontier systems is open; the labels have the failure modes cataloged above; and a feature-level story about one input is not a general theory of the model ([Lindsey et al. 2025](https://transformer-circuits.pub/2025/attribution-graphs/biology.html), the current high-water mark of feature-level analysis, is built from hand-picked prompts and says so). The honest posture is the one you would take toward any young instrument: use it, validate it, report its uncertainty — a reading, not a proof.
+
+## Further reading
+
+- [Elhage et al. (2022), "Toy Models of Superposition," Transformer Circuits](https://transformer-circuits.pub/2022/toy_model/index.html) — why neurons are the wrong unit, worked out in models small enough to fully understand.
+- [Bricken et al. (2023), "Towards Monosemanticity," Transformer Circuits](https://transformer-circuits.pub/2023/monosemantic-features/index.html) — the paper that made SAEs the field's workhorse; the feature-splitting section is essential fine print.
+- [Templeton et al. (2024), "Scaling Monosemanticity," Transformer Circuits](https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html) — features at production scale, including the Golden Gate Bridge; read with the [Golden Gate Claude post](https://www.anthropic.com/news/golden-gate-claude).
+- [Lieberum et al. (2024), "Gemma Scope: Open Sparse Autoencoders Everywhere All At Once on Gemma 2"](https://arxiv.org/abs/2408.05147) — the open SAE release behind this chapter's hands-on; [neuronpedia.org/gemma-scope](https://www.neuronpedia.org/gemma-scope) is its guided front door.
+- [Li et al. (2025), "Evaluating Adversarial Robustness of Concept Representations in Sparse Autoencoders"](https://arxiv.org/abs/2505.16004) — the sharpest current caution about trusting feature labels.
+- [Ma (2026), "Computational Basis of Large Language Models' Decision Making in Social Simulation," *Sociological Methodology*](https://doi.org/10.1177/00811750261421220) — internal representations as social science method, published inside the discipline.
+- [Kozlowski, Taddy & Evans (2019), "The Geometry of Culture," *American Sociological Review*](https://journals.sagepub.com/doi/10.1177/0003122419877135) — the pre-LLM ancestor of reading learned dimensions as cultural measurement, from @sec-embeddings.

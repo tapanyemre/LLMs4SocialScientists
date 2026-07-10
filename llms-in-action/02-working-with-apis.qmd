@@ -1,0 +1,357 @@
+# Working with APIs {#sec-apis}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have 10,000 parliamentary speeches on immigration and you want each one coded for stance: restrictive, expansive, or neutral. A team of research assistants could do it. It would take months, cost thousands of dollars, and you would still need to check intercoder reliability. Or you can send each speech to a large language model through an API and get labels back in an afternoon. That second option is what this chapter teaches — not whether the labels are any good (that is a validation question we return to at the end and in @sec-prompting), but the mechanics: how to authenticate, what a request actually contains, which settings matter for research, how to get output your dataframe can read, and what the whole thing costs.
+
+In @sec-huggingface you ran models locally through Hugging Face. Local models are free and private, but the models that fit in a Colab session are small. The most capable models — GPT, Claude, Gemini, and the large open-weight models — run on someone else's hardware, and you reach them through an API: you send text over the internet, the provider's servers run the model, and you get text back. An API is a counter you order at. You hand over your request, the kitchen you never see does the work, and your order comes back. The rest of this chapter is about learning to order precisely.
+
+## Local model or API?
+
+Neither is better. They trade off, and you should know the trade before you commit a project to one side.
+
+| | Local (@sec-huggingface) | API (this chapter) |
+|---|---|---|
+| **Capability** | Limited by your hardware; small models | Frontier models |
+| **Cost** | Free after download | Paid per token (often cheap, never zero) |
+| **Privacy** | Data never leaves your machine | Data goes to the provider |
+| **Reproducibility** | Full: pin the weights, rerun forever | Weaker: providers retire and update models |
+| **Setup** | Downloads, memory limits, GPU worries | An API key and three lines of code |
+
+Two of these rows matter more than students expect. If your data includes interview transcripts covered by an IRB protocol, "data goes to the provider" may end the conversation before it starts — check your protocol and the provider's data-use terms before you send anything. And if you plan to publish, "providers retire models" means the exact model you used may be gone before your reviewers see the paper. [Palmer, Smith, and Spirling (2024)](https://www.nature.com/articles/s43588-023-00585-1) argue that using a proprietary model in research requires explicit justification for exactly this reason. Keep the concern in mind; it shapes several choices below.
+
+## API keys: safety first
+
+Every provider gives you an **API key** — a long string that identifies your account and bills your usage. Treat it like a debit card number, because that is what it is. Anyone who has your key can spend your money.
+
+The one rule: **never write the key in your code.** Not in a notebook, not in a script, not "just for now." Notebooks get shared. Scripts get pushed to GitHub. Automated scrapers find exposed keys within minutes and run up charges on stolen accounts.
+
+<!-- DRAFT NOTE (Emre): classroom story goes here — every cohort someone pastes a key into a shared Colab or a public repo. Tell the actual version. -->
+
+In Google Colab, the safe place is the Secrets panel: click the key icon in the left sidebar, add a secret named `OPENAI_API_KEY` (and later `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`), and paste the key as the value. Then load it in code:
+
+```{python}
+from google.colab import userdata
+
+openai_key = userdata.get("OPENAI_API_KEY")
+```
+
+The key never appears in the notebook, so the notebook is safe to share. On your own machine, the equivalent is an environment variable:
+
+```{python}
+import os
+
+openai_key = os.environ["OPENAI_API_KEY"]  # set in your shell, not in code
+```
+
+::: {.callout-tip}
+Keys can be revoked and reissued in seconds from the provider's dashboard. If you even suspect a key leaked, revoke it. There is no cost to being paranoid here and a real cost to being relaxed.
+:::
+
+Where to get keys: [OpenAI](https://platform.openai.com/docs/quickstart) and [Anthropic](https://console.anthropic.com/) each require an account and a small prepaid balance. [OpenRouter](https://openrouter.ai) is a single account that resells access to models from many providers — including open-weight models — through one key, which makes it convenient for the model comparisons we do below. [Hugging Face](https://huggingface.co) also offers hosted inference with a free tier.
+
+## The anatomy of a call
+
+Before we let a library hide the details, look at what actually travels over the wire. One request, by hand, using nothing but `requests`:
+
+```{python}
+import requests
+
+url = "https://api.openai.com/v1/chat/completions"
+headers = {
+    "Authorization": f"Bearer {openai_key}",
+    "Content-Type": "application/json",
+}
+payload = {
+    "model": "gpt-5-mini",
+    "messages": [
+        {
+            "role": "system",
+            "content": "You classify parliamentary speeches on immigration. "
+                       "Answer with exactly one word: restrictive, expansive, or neutral.",
+        },
+        {
+            "role": "user",
+            "content": "Speech: 'We cannot keep pretending the current rate of arrivals "
+                       "is sustainable while our housing waiting lists grow year on year.'",
+        },
+    ],
+}
+
+response = requests.post(url, headers=headers, json=payload)
+result = response.json()
+```
+
+<!-- DRAFT NOTE (Emre): model names churn fast — verify "gpt-5-mini", "claude-haiku-4-5", and the OpenRouter slug below are still current at publication time. -->
+
+That is the whole thing: a URL, a header proving who you are, and a JSON payload. The payload has two parts you will set on every call for the rest of your research life:
+
+- **`model`** — which model to run. This is a choice you must record in your methods section, exactly, version string and all.
+- **`messages`** — a list of turns. The **system message** sets the standing instructions: the role, the codebook, the output format. The **user message** carries the document to classify. Keep the fixed instructions in the system message and the varying data in the user message; this separation is what makes batch processing clean later.
+
+And here, trimmed, is what comes back:
+
+```json
+{
+  "model": "gpt-5-mini",
+  "choices": [
+    {
+      "message": {"role": "assistant", "content": "restrictive"},
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 61,
+    "completion_tokens": 3,
+    "total_tokens": 64
+  }
+}
+```
+
+Two parts matter. The answer lives at `result["choices"][0]["message"]["content"]` — you will type that path so often it becomes muscle memory. And the `usage` block is your receipt: this call read 61 tokens and wrote 3. Those two numbers are the entire basis of API pricing, and we will do arithmetic with them shortly.
+
+In practice you will not build requests by hand. The provider's client library does the same thing with less ceremony:
+
+```{python}
+from openai import OpenAI
+
+client = OpenAI(api_key=openai_key)
+
+completion = client.chat.completions.create(
+    model="gpt-5-mini",
+    messages=[
+        {"role": "system", "content": "You classify parliamentary speeches on immigration. "
+                                      "Answer with exactly one word: restrictive, expansive, or neutral."},
+        {"role": "user", "content": "Speech: 'We cannot keep pretending the current rate of arrivals "
+                                    "is sustainable while our housing waiting lists grow year on year.'"},
+    ],
+)
+
+print(completion.choices[0].message.content)   # restrictive
+print(completion.usage.total_tokens)           # 64
+```
+
+Same request, same response, but now it is Python objects instead of raw JSON. Everything you saw in the by-hand version is still there underneath.
+
+## Two dials that matter for research
+
+Chat completion calls accept many optional parameters. For research use, two do most of the work.
+
+**`temperature`** controls how the model samples its next token. Recall from @sec-transformers that the model produces a probability distribution over possible next tokens. At high temperature it samples adventurously from that distribution; at `temperature=0` it (approximately) always takes the most probable token. For annotation and classification, set it to 0 wherever the model accepts it. You want the same speech to get the same label on Tuesday as it did on Monday.
+
+One caveat: not every model exposes the dial. OpenAI's reasoning-first models — the gpt-5 series used in this chapter — fix their sampling settings internally and reject the `temperature` parameter with an error, so the OpenAI calls in this chapter simply omit it. Anthropic's models and most open-weight models still accept it; you will see `temperature=0` in those calls in the next section. Check the model's documentation before assuming the dial is there.
+
+::: {.callout-warning}
+Where it is accepted, `temperature=0` reduces randomness; it does not eliminate it. Providers' serving infrastructure introduces small nondeterminisms, so identical calls can occasionally return different answers even at temperature 0. Treat any single output as a reading, not a proof — the fix is to validate against human labels and, for borderline cases, to query more than once, not to trust the dial.
+:::
+
+**`max_tokens`** (called `max_completion_tokens` in newer OpenAI APIs, `max_tokens` in Anthropic's) caps how much the model can write back. Output tokens are the expensive ones and the slow ones. If you asked for a one-word label, cap the output near that length. A cap of 10 tokens on a classification task costs you nothing in accuracy and protects you from a model that decides to write an essay explaining its choice — 10,000 times. One wrinkle: on reasoning models (OpenAI's gpt-5 series again), hidden reasoning tokens count against this cap, so a tight cap can cut the model off before any visible answer appears — cap tightly on standard models, generously on reasoning ones.
+
+Prompting itself — how to write the system message, few-shot examples, codebook design, all of it — is a craft with its own chapter: @sec-prompting. Here we stay with the plumbing.
+
+## Same prompt, three models
+
+You should never let your research design get married to one provider. Different models have different training data, different instruction tuning, and different failure modes — and for published work, the choice between a proprietary and an open model is itself a methodological decision. So build the habit early: run the same prompt on at least three models and compare.
+
+The convenient fact is that most providers speak the same dialect. Anthropic has its own client; nearly everyone else, including OpenRouter's gateway to open models, uses the OpenAI format. Three small functions cover the field:
+
+```{python}
+from openai import OpenAI
+import anthropic
+from google.colab import userdata
+
+SYSTEM = ("You classify parliamentary speeches on immigration. "
+          "Answer with exactly one word: restrictive, expansive, or neutral.")
+
+speech = ("We cannot keep pretending the current rate of arrivals is "
+          "sustainable while our housing waiting lists grow year on year.")
+
+# --- OpenAI ---
+openai_client = OpenAI(api_key=userdata.get("OPENAI_API_KEY"))
+
+def ask_openai(text, model="gpt-5-mini"):
+    r = openai_client.chat.completions.create(
+        model=model,               # gpt-5 series: temperature not accepted
+        messages=[{"role": "system", "content": SYSTEM},
+                  {"role": "user", "content": f"Speech: '{text}'"}],
+    )
+    return r.choices[0].message.content
+
+# --- Anthropic ---
+anthropic_client = anthropic.Anthropic(api_key=userdata.get("ANTHROPIC_API_KEY"))
+
+def ask_anthropic(text, model="claude-haiku-4-5"):
+    r = anthropic_client.messages.create(
+        model=model,
+        max_tokens=10,
+        temperature=0,
+        system=SYSTEM,                       # note: system is its own argument here
+        messages=[{"role": "user", "content": f"Speech: '{text}'"}],
+    )
+    return r.content[0].text
+
+# --- An open-weight model, via OpenRouter ---
+openrouter_client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=userdata.get("OPENROUTER_API_KEY"),
+)
+
+def ask_open_model(text, model="meta-llama/llama-3.3-70b-instruct"):
+    r = openrouter_client.chat.completions.create(
+        model=model,
+        temperature=0,
+        messages=[{"role": "system", "content": SYSTEM},
+                  {"role": "user", "content": f"Speech: '{text}'"}],
+    )
+    return r.choices[0].message.content
+
+for name, fn in [("OpenAI", ask_openai),
+                 ("Anthropic", ask_anthropic),
+                 ("Llama 3.3 70B", ask_open_model)]:
+    print(f"{name:>14}: {fn(speech)}")
+```
+
+Notice how little changed across the three. Anthropic wants `system` as its own argument and requires `max_tokens`; OpenRouter is literally the OpenAI client pointed at a different `base_url`. That last trick is worth internalizing — it means one code path gives you access to dozens of open-weight models, and switching models is editing a string.
+
+When you run this on a handful of speeches, do not just check whether the labels agree. Look at *where* they disagree. In my experience the disagreements cluster on exactly the speeches a human coding team would argue about — hedged positions, procedural remarks, sarcasm. Those cases belong in your validation sample.
+
+<!-- DRAFT NOTE (Emre): add your own three-model disagreement example from class here — the one that surprised students. -->
+
+## Structured output: JSON your dataframe can read
+
+A one-word answer is easy to parse. Real annotation tasks want more: a label, a confidence, maybe a supporting quote. If you just ask for these, the model will wrap them in prose — "Certainly! Here is the analysis you requested..." — and your parsing code becomes a pile of regular expressions.
+
+The fix is **structured output**. Modern APIs let you declare a schema, and the model's response is constrained to valid JSON matching it:
+
+```{python}
+import json
+
+schema = {
+    "name": "speech_annotation",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "stance": {"type": "string",
+                       "enum": ["restrictive", "expansive", "neutral"]},
+            "confidence": {"type": "string",
+                           "enum": ["high", "medium", "low"]},
+            "evidence": {"type": "string",
+                         "description": "Short quote from the speech supporting the label"},
+        },
+        "required": ["stance", "confidence", "evidence"],
+        "additionalProperties": False,
+    },
+    "strict": True,
+}
+
+r = openai_client.chat.completions.create(
+    model="gpt-5-mini",
+    messages=[{"role": "system", "content": SYSTEM},
+              {"role": "user", "content": f"Speech: '{speech}'"}],
+    response_format={"type": "json_schema", "json_schema": schema},
+)
+
+annotation = json.loads(r.choices[0].message.content)
+print(annotation["stance"], "|", annotation["confidence"])
+```
+
+The `enum` fields are doing quiet but important work: the model *cannot* return a stance outside your codebook. No "somewhat restrictive," no "N/A," no creative fourth category invented on document 7,342. Every response is a dict you can append straight to a list and hand to `pd.DataFrame`.
+
+Not every provider supports strict schemas, and open models via OpenRouter vary. The portable fallback is old-fashioned: describe the JSON you want in the system message, then parse defensively.
+
+```{python}
+def parse_annotation(raw_text):
+    """Parse a model response into a dict, or return None on failure."""
+    try:
+        ann = json.loads(raw_text)
+        assert ann["stance"] in {"restrictive", "expansive", "neutral"}
+        return ann
+    except (json.JSONDecodeError, KeyError, AssertionError):
+        return None   # log it, review it by hand later
+```
+
+::: {.callout-warning}
+A schema guarantees the *shape* of the answer, not its *truth*. A syntactically perfect JSON object can still contain a wrong label, and the `evidence` field can contain a quote that does not appear in the speech. Structured output removes parsing errors from your pipeline; it removes nothing else. Validation against human-coded data is still on you.
+:::
+
+## When calls fail
+
+They will. At document 8,000 of 10,000, at 2 a.m., the API will return an error, and if your loop was `for speech in speeches: results.append(annotate(speech))` with nothing else, you will lose eight thousand annotations to one hiccup. The common failures:
+
+- **Authentication errors (401)** — bad or revoked key. Fails instantly and permanently; no retry will save you. Fix the key.
+- **Rate limits (429)** — you asked too fast. This one is *supposed* to happen at scale. Wait and retry.
+- **Server overload (500/529)** — the provider is having a bad moment. Wait and retry.
+- **Timeouts** — the request just hangs. Retry.
+
+The pattern that handles all the transient ones is **retry with exponential backoff**: wait 2 seconds, then 4, then 8, giving up after a few attempts.
+
+```{python}
+import time
+
+def annotate_with_retries(speech, max_attempts=4):
+    for attempt in range(max_attempts):
+        try:
+            return ask_openai(speech)
+        except Exception as e:
+            wait = 2 ** (attempt + 1)          # 2, 4, 8, 16 seconds
+            print(f"Attempt {attempt + 1} failed ({e}). Waiting {wait}s.")
+            time.sleep(wait)
+    return None                                # mark as failed, move on
+```
+
+Two habits to pair with it. First, *save as you go* — append each result to a CSV or a list you checkpoint every 100 documents, so a crash costs you minutes, not the night. Second, *record failures instead of crashing on them* — a `None` in the results with the document ID attached is a to-do list; an unhandled exception is a disaster. The full pipeline — checkpointing, progress tracking, resuming, and the providers' purpose-built batch endpoints that trade speed for a discount — is the subject of @sec-batch.
+
+## What it costs: token arithmetic
+
+API pricing is simple enough to do on paper, and you should, before every project. The formula:
+
+$$
+\text{cost} = \frac{\text{input tokens}}{1{,}000{,}000} \times \text{input price} + \frac{\text{output tokens}}{1{,}000{,}000} \times \text{output price}
+$$
+
+Prices are quoted per million tokens, input and output priced separately, output usually several times dearer. Let's cost the study this chapter opened with: 10,000 parliamentary speeches, stance-coded with the structured-output prompt above.
+
+First, tokens per document. A useful rule of thumb for English is 1 token ≈ 0.75 words. Say the average speech excerpt is 400 words — about 530 tokens — and our system message plus schema adds about 170 tokens to every call. The JSON annotation coming back (label, confidence, a short quote) runs about 80 tokens. Per document, then: 700 tokens in, 80 tokens out.
+
+| Quantity | Per document | × 10,000 documents |
+|---|---:|---:|
+| Input tokens (speech + instructions) | 700 | 7,000,000 |
+| Output tokens (JSON annotation) | 80 | 800,000 |
+
+Now apply prices. The numbers below are **placeholders at plausible mid-2026 magnitudes** — check the providers' pricing pages before you budget anything.
+
+<!-- DRAFT NOTE (Emre): update these prices from the live pricing pages at publication, and re-run the arithmetic. Magnitudes were chosen to be realistic for a small vs. frontier model but are NOT quoted prices. -->
+
+| | Small model (e.g., \$0.25 / \$1.00 per 1M) | Frontier model (e.g., \$3 / \$15 per 1M) |
+|---|---:|---:|
+| Input: 7M tokens | \$1.75 | \$21.00 |
+| Output: 0.8M tokens | \$0.80 | \$12.00 |
+| **Total for 10,000 speeches** | **\$2.55** | **\$33.00** |
+
+Read that table twice. The entire 10,000-document study costs less than a coffee with a small model and less than a hardcover book with a frontier one — compare that to months of RA time. But also notice the 13× spread between models, and remember that the arithmetic scales linearly: add few-shot examples to your prompt and every one of the 10,000 calls carries them; ask for explanations and your output tokens quadruple. Prompt length is a budget line.
+
+::: {.callout-tip}
+Never estimate; pilot. Run 100 documents, read the actual `usage` numbers off the responses, multiply by 100, and add a margin for retries. Ten minutes of piloting also tells you the thing arithmetic cannot: whether the cheap model's labels are good enough. Often they are — and the frontier-model budget is better spent double-annotating your validation sample.
+:::
+
+## In research
+
+The workflow in this chapter — a codebook in a system message, documents in user messages, structured labels out — is now a standard instrument in social science. The reference point is [Gilardi, Alizadeh, and Kubli (2023)](https://www.pnas.org/doi/10.1073/pnas.2305016120), who found that ChatGPT outperformed MTurk crowd workers on annotating tweets and news articles for relevance, stance, topic, and framing, at roughly one-thirtieth the cost per label. That paper did to crowd-coding budgets what the arithmetic above suggests it should have. The broader benchmark evidence is more sobering: [Ziems et al. (2024)](https://aclanthology.org/2024.cl-1.8/) tested 13 LLMs across 25 computational social science benchmarks and found that zero-shot models achieve fair agreement with humans but fail to outperform fine-tuned classifiers on established labeling tasks. The honest summary: APIs give you a fast, cheap, *pretty good* coder — whether pretty good is good enough is a question your validation design has to answer, not the model.
+
+What the technique unlocks is scale on tasks that used to be capped by coder-hours. Stance and frame coding of parliamentary debates and party manifestos across decades and languages. Theme extraction from thousands of open-ended survey responses that would otherwise be skimmed and set aside. First-pass coding of interview transcripts against a qualitative codebook, with the researcher auditing rather than producing every label. Media studies tracking a frame across years of news coverage. In all of these, the API loop replaces the first coding pass, and human effort moves to where it has the most value: writing the codebook, adjudicating hard cases, and coding the validation sample.
+
+The discipline's emerging ground rules are worth internalizing before your first real project. Validate against human-coded data on a meaningful sample — a few hundred documents, not a dozen — and report agreement statistics as you would for human coders. Check that your results are robust to reasonable rephrasings of the prompt, since labels can shift with wording ([Törnberg, 2024](https://sociologica.unibo.it/article/view/19461) collects these practices into a usable checklist). Pin and report the exact model version, temperature, and prompt. And think ahead about reproducibility: a proprietary model can be deprecated before your paper clears review, which is the core of [Palmer, Smith, and Spirling's (2024)](https://www.nature.com/articles/s43588-023-00585-1) argument that proprietary models need explicit justification — and a practical argument for the open-weight route via OpenRouter or local models (@sec-huggingface), where the weights can be archived. My own default: pilot on a cheap proprietary model, but check whether an open model matches it before committing, because if the open model is good enough you get reproducibility for free.
+
+<!-- DRAFT NOTE (Emre): add your own annotation-project example here (which corpus, which models, what the validation showed) — this section reads generic without it. -->
+
+## Further reading
+
+- [What is an API? (freeCodeCamp)](https://www.freecodecamp.org/news/what-is-an-api-in-english-please-b880a3214a82/) — the gentlest introduction, no code required.
+- [OpenAI API quickstart](https://platform.openai.com/docs/quickstart) and the [Anthropic API docs](https://docs.anthropic.com/) — the primary references for the two proprietary clients used in this chapter.
+- [OpenRouter](https://openrouter.ai) — one key, many models; the easiest way to put open-weight models in your comparison set.
+- [Gilardi, Alizadeh & Kubli (2023), "ChatGPT outperforms crowd workers for text-annotation tasks," *PNAS*](https://www.pnas.org/doi/10.1073/pnas.2305016120) — the study that made LLM annotation mainstream.
+- [Ziems et al. (2024), "Can Large Language Models Transform Computational Social Science?" *Computational Linguistics*](https://aclanthology.org/2024.cl-1.8/) — the broad benchmark; read it before you claim your labels are good.
+- [Törnberg (2024), "Best Practices for Text Annotation with Large Language Models," *Sociologica*](https://sociologica.unibo.it/article/view/19461) — a practical checklist for exactly the workflow in this chapter; see also his [how-to guide](https://arxiv.org/abs/2307.13106).
+- [Palmer, Smith & Spirling (2024), "Using proprietary language models in academic research requires explicit justification," *Nature Computational Science*](https://www.nature.com/articles/s43588-023-00585-1) — the reproducibility case for open models, in two pages.

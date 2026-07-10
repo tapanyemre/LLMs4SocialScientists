@@ -1,0 +1,274 @@
+# GraphRAG: Adding Structure {#sec-graphrag}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you study coalition politics and you have 2,000 news articles covering a drawn-out government formation. You want to answer a question like: *is a coalition between the Social Democrats and the Liberals plausible, and who else would need to be involved?* No single article answers that. The evidence is a chain — a leader's statement in one article, a meeting reported in another, a conditional offer in a third — and the chain runs *across* documents. The RAG pipeline from @sec-rag retrieves documents that are *similar* to your question. But similarity is about topic, not about evidentiary role, and no document in the corpus resembles the answer you are trying to assemble.
+
+This chapter adds structure to retrieval. Instead of only embedding documents, we use an LLM to extract *who relates to whom* — entity-relation triplets — build a small knowledge graph from them, and retrieve from the graph's neighborhoods as well as from the text. That combination is called **GraphRAG**. For social scientists this should feel like coming home: the graph we build is an ordinary network object, and network analysis — co-sponsorship, elite networks, influence structures — is one of the field's oldest quantitative traditions. GraphRAG is network analysis meeting text, with an LLM doing the (noisy, validation-hungry) coding step in the middle.
+
+## The question similarity cannot see
+
+Vector retrieval has two failure modes that matter for research questions about relationships.
+
+The first is **multi-hop evidence**. "Is a Social Democrat–Liberal coalition plausible?" might require: Novak leads the Liberals (document A), Novak signaled support for a Weber-led government (document B), Weber leads the Social Democrats (document C). Each document holds one link. None of them holds the chain. Embedding the question and ranking documents by cosine similarity — the whole machinery of @sec-embeddings — has no concept of a chain. It scores each document independently.
+
+The second is **vocabulary mismatch of a specific kind**. The documents that *mention* your question's keywords are often not the documents that carry the evidence. In a formation crisis, the article containing the word "coalition" may be the one where a leader rules one out; the article that actually moves the story forward says "a third round of talks on energy taxes." Topical similarity has no reason to prefer the second. This is not a bug in embeddings — they are doing exactly their job. The job is just the wrong one for relational questions.
+
+Be clear-eyed about the converse, too: most retrieval questions are *not* relational. "What did party X say about immigration?" is served perfectly well by plain vector RAG, and everything in this chapter adds cost and moving parts. The decision rule we build toward: pay for structure only when the question is structural.
+
+## Triplets by hand
+
+A knowledge graph is a pile of facts in the shape **(subject, relation, object)** — a *triplet*. Before any code, let's do the whole pipeline by hand on three short news snippets. (These are my own invented examples — fictional politicians, realistic grammar.)
+
+> **Doc 0.** Social Democrat leader Weber on Tuesday ruled out any coalition with the National Front, calling its programme "a threat to the constitutional order."
+>
+> **Doc 1.** Green party chair Arslan met Liberal leader Novak for a third round of talks on Wednesday. The two discussed energy taxes and did not speak to reporters.
+>
+> **Doc 2.** Asked about the stalemate, Novak said the Liberals were "open to supporting a Weber government" provided the Greens joined it.
+
+First decision: the **relation vocabulary**. We allow four relations — `leads`, `meets_with`, `supports`, `opposes` — and nothing else. This is a codebook decision, exactly like designing categories for human coders, and it shapes everything downstream. Now code the three documents:
+
+| # | Subject | Relation | Object | Source |
+|---|---------|----------|--------|--------|
+| 1 | Weber | leads | Social Democrats | Doc 0 |
+| 2 | Weber | opposes | National Front | Doc 0 |
+| 3 | Arslan | leads | Greens | Doc 1 |
+| 4 | Novak | leads | Liberals | Doc 1 |
+| 5 | Arslan | meets_with | Novak | Doc 1 |
+| 6 | Novak | supports | Weber | Doc 2 |
+
+Six triplets, seven entities. Drawn as a graph:
+
+```
+Social Democrats <--leads-- Weber <--supports-- Novak --leads--> Liberals
+                              |                   |
+                           opposes            meets_with
+                              v                   |
+                       National Front          Arslan --leads--> Greens
+```
+
+Now answer the coalition question *by walking edges*. Start at Social Democrats: who leads them? Weber. Who supports Weber? Novak. Whom does Novak lead? The Liberals. A three-edge path connects the two parties — the coalition is on the table, and the answer was assembled from Docs 0, 1, and 2 jointly, which is precisely what per-document similarity scoring cannot do. Who else is involved? Novak's one remaining edge: `meets_with Arslan`, who leads the Greens — and Doc 2's condition ("provided the Greens joined") tells you why those talks matter. Notice also that the *broker* question is a centrality question: Novak ties Weber for the highest degree (3), and removing Novak is what disconnects the Liberals and the Greens from the rest — degree and brokerage, read straight off the graph. At seven nodes that is a party trick; at 2,000 articles it is a finding.
+
+One more thing the table should make you uneasy. Triplet 6 records `(Novak, supports, Weber)`, but Doc 2 says the support is *conditional*. The triplet flattened that away. Flattening is the price of structure: you can add a `conditional: true` attribute to the edge if your research question needs it, but every such choice is a coding decision you must make deliberately, not one the format makes for you.
+
+## Extracting triplets with an LLM
+
+Hand-coding six triplets took two minutes. Hand-coding 2,000 articles is a summer. Until recently the automated route meant task-specific NLP pipelines — named entity recognition, then relation classification — that took real engineering to assemble. An instructed LLM now does a respectable first pass in one call, and the instructions are, again, a codebook: entity types, the relation vocabulary, canonical names, and an explicit "do not infer."
+
+We reuse the toolkit from @sec-apis — including structured output with an `enum`, which here guarantees the model cannot invent a fifth relation:
+
+```{python}
+import json
+from openai import OpenAI
+from google.colab import userdata
+
+client = OpenAI(api_key=userdata.get("OPENAI_API_KEY"))
+
+articles = [
+    "Social Democrat leader Weber on Tuesday ruled out any coalition with "
+    "the National Front, calling its programme 'a threat to the constitutional order.'",
+    "Green party chair Arslan met Liberal leader Novak for a third round of talks "
+    "on Wednesday. The two discussed energy taxes and did not speak to reporters.",
+    "Asked about the stalemate, Novak said the Liberals were 'open to supporting "
+    "a Weber government' provided the Greens joined it.",
+    # ...in a real project: thousands of articles
+]
+
+RELATIONS = ["leads", "meets_with", "supports", "opposes"]
+
+schema = {
+    "name": "triplet_extraction",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "triplets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "subject": {"type": "string"},
+                        "relation": {"type": "string", "enum": RELATIONS},
+                        "object": {"type": "string"},
+                    },
+                    "required": ["subject", "relation", "object"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["triplets"],
+        "additionalProperties": False,
+    },
+    "strict": True,
+}
+
+EXTRACTION_SYSTEM = """You extract entity-relation triplets from news text about party politics.
+- Subjects and objects are named political actors: politicians, parties, organizations.
+- Use each actor's shortest canonical name ('Weber', 'Liberals'), spelled the same way every time.
+- Use only the allowed relations.
+- Extract only relations the text states. Do not infer, do not complete, do not guess.
+Return every triplet you find."""
+
+def extract_triplets(text, model="gpt-5-mini"):
+    r = client.chat.completions.create(
+        model=model,               # gpt-5 series: temperature not accepted
+        messages=[{"role": "system", "content": EXTRACTION_SYSTEM},
+                  {"role": "user", "content": text}],
+        response_format={"type": "json_schema", "json_schema": schema},
+    )
+    return json.loads(r.choices[0].message.content)["triplets"]
+
+all_triplets = []
+for doc_id, text in enumerate(articles):
+    for t in extract_triplets(text):
+        t["doc_id"] = doc_id          # provenance: which article said so
+        all_triplets.append(t)
+
+print(f"{len(all_triplets)} triplets extracted from {len(articles)} articles")
+```
+
+<!-- DRAFT NOTE (Emre): model names churn — verify "gpt-5-mini" and the OpenRouter slug below are current at publication. -->
+
+Nothing here is provider-specific. The same call runs on Claude (with `system` as its own argument, via the `anthropic` client) or on an open-weight model through OpenRouter — the OpenAI client pointed at `base_url="https://openrouter.ai/api/v1"` with a model string like `"meta-llama/llama-3.3-70b-instruct"`, exactly the trick from @sec-apis. Extraction quality varies across models more than classification quality does, in my experience, so pilot on a sample before you commit. And note the cost structure: extraction is *one LLM call per document at index time*. The token arithmetic from the APIs chapter applies in full, and at thousands of documents this loop is a job for @sec-batch.
+
+::: {.callout-warning}
+Triplet extraction is a coding step, and it is noisy in ways that human coding is noisy — plus a few of its own. The failure modes to expect: **entity resolution** ("Weber," "Ms. Weber," and "the Social Democrat leader" become three nodes unless your prompt and post-processing merge them — and a wrong merge silently rewires the network); **inferred relations** (the model reports an alliance the text merely implies); **flipped direction** (who supports whom); and **flattened nuance** (our conditional-support example). Treat it like any coding instrument: draw a random sample of extracted triplets, check them against the source text by hand, and report agreement before you trust any statistic computed on the graph. The output is a reading of the corpus, not a proof about it.
+:::
+
+## From triplets to a graph
+
+A list of triplets becomes a graph in a few lines of [networkx](https://networkx.org/). We use a directed multigraph — direction matters (`supports` is not symmetric), and two actors can be linked by more than one relation:
+
+```{python}
+import networkx as nx
+
+G = nx.MultiDiGraph()
+
+for t in all_triplets:
+    G.add_edge(t["subject"], t["object"],
+               relation=t["relation"], doc_id=t["doc_id"])
+
+print(G.number_of_nodes(), "nodes,", G.number_of_edges(), "edges")
+
+for u, v, data in G.edges(data=True):
+    print(f"({u}) --{data['relation']}--> ({v})   [doc {data['doc_id']}]")
+```
+
+::: {.callout-tip}
+Keep the `doc_id` on every edge. Provenance turns the graph from a black box into an auditable dataset: every edge can be traced to the sentence that produced it, your validation sample is one `random.sample()` away, and — as we will see below — the LLM can cite sources in its answers.
+:::
+
+Pause on what you now hold. `G` is not GraphRAG plumbing; it is an ordinary network object, and every tool from a network analysis course applies to it directly. `nx.degree_centrality(G)` will tell you Novak and Weber sit at the center of our toy graph. On a real corpus, centrality, brokerage, and community structure of the extracted network are research outputs in their own right — you may find the graph more valuable than the question-answering it was built for.
+
+## Querying the neighborhood
+
+Retrieval from a graph means: take the entities the question mentions, walk out a fixed number of hops, and collect the edges you pass. `nx.ego_graph` does the walking; we serialize the result as plain triplet sentences, because that is what fits in a prompt:
+
+```{python}
+def graph_context(G, entities, hops=2):
+    """Collect all relations within `hops` of the given entities, as text."""
+    lines = []
+    for entity in entities:
+        if entity not in G:
+            continue
+        sub = nx.ego_graph(G, entity, radius=hops, undirected=True)
+        for u, v, data in sub.edges(data=True):
+            lines.append(f"{u} {data['relation']} {v} [doc {data['doc_id']}]")
+    return sorted(set(lines))
+
+print("\n".join(graph_context(G, ["Social Democrats", "Liberals"])))
+```
+
+The `hops` parameter is the dial that decides how far a chain of evidence can reach. At `hops=1`, starting from "Liberals" you collect only `Novak leads Liberals` — the supporting statement that connects Novak to Weber sits one step further out. At `hops=2` the chain comes into view. There is no free lunch in turning the dial up: on a dense real-world graph, three hops from a well-connected politician can pull in half the corpus. Start at 1–2 and increase only when your questions demonstrably need longer chains.
+
+## GraphRAG: structure in the prompt
+
+Now assemble the full system: vector retrieval brings back raw text (nuance, quotes, the conditional our triplets flattened), graph retrieval brings back structure (the cross-document chains), and both go into the prompt. First a compact version of the retriever from @sec-rag — at three documents cosine-by-hand is enough; at thousands you want the FAISS index built there:
+
+```{python}
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+doc_vectors = embedder.encode(articles, normalize_embeddings=True)
+
+def find_relevant_docs(question, k=2):
+    q = embedder.encode([question], normalize_embeddings=True)[0]
+    ranked = np.argsort(-(doc_vectors @ q))
+    return [(int(i), articles[i]) for i in ranked[:k]]
+```
+
+Then the combined ask:
+
+```{python}
+def ask_graphrag(question, hops=2, k=2, model="gpt-5-mini"):
+    # 1. Vector retrieval: text similar to the question
+    docs = find_relevant_docs(question, k=k)
+
+    # 2. Entity linking: which graph nodes does the question mention?
+    entities = [n for n in G.nodes if n.lower() in question.lower()]
+
+    # 3. Graph retrieval: their neighborhoods, as triplet sentences
+    relations = graph_context(G, entities, hops=hops)
+
+    context = "Retrieved articles:\n"
+    context += "\n".join(f"[doc {i}] {text}" for i, text in docs)
+    context += "\n\nKnown relationships (extracted from the full corpus):\n"
+    context += "\n".join(f"- {r}" for r in relations)
+
+    r = client.chat.completions.create(
+        model=model,               # gpt-5 series: temperature not accepted
+        messages=[
+            {"role": "system",
+             "content": "Answer using only the articles and relationships provided. "
+                        "Cite doc ids. If the context does not contain the answer, say so."},
+            {"role": "user", "content": f"{context}\n\nQuestion: {question}"},
+        ],
+    )
+    return r.choices[0].message.content
+
+print(ask_graphrag(
+    "Is a coalition between the Social Democrats and the Liberals plausible, "
+    "and who else would need to be involved?"
+))
+```
+
+Step 2 deserves an honest label: matching node names as substrings of the question is the crudest possible entity linker. It misses pronouns, nicknames, and misspellings, and it is case-brittle. Production systems use a proper linking step (often another LLM call that maps question mentions to canonical node names). For a first research prototype, the crude version fails loudly enough to be improvable.
+
+## Plain vs. RAG vs. GraphRAG
+
+The cleanest way to see what structure buys is to hold the question fixed and vary only what enters the context window:
+
+| | Plain LLM | Vector RAG | GraphRAG |
+|---|-----------|------------|----------|
+| **In the context** | Nothing — training memory only | Top-*k* similar documents | Top-*k* documents + entity neighborhoods |
+| **Answers come from** | The model's parameters | Your corpus, one document at a time | Your corpus, including cross-document chains |
+| **Good at** | General background | "What does the corpus say about X?" | "How is X connected to Y?" |
+| **Fails when** | Corpus-specific facts needed | Multi-hop questions, vocabulary mismatch | Extraction errors, missing edges |
+| **Marginal cost** | One call | Embedding pass + one call | One extraction call *per document*, then one call |
+
+Run all three on the coalition question and the pattern is predictable from the table. The plain LLM produces fluent generalities about coalition politics — or, worse, confident specifics about fictional politicians. Vector RAG grounds the answer in whichever articles rank as similar, and can miss the chain when the similar articles are not the evidentiary ones. GraphRAG has the chain handed to it as triplet sentences and can reason over it, citing the documents each link came from.
+
+<!-- DRAFT NOTE (Emre): paste the actual three-way outputs from the class run here (Lab 10 did this comparison live on the PhilPapers corpus) — the predictable pattern lands much harder with real transcripts, including the run where GraphRAG did NOT win. -->
+
+Keep the comparison honest in the other direction, too. Our GraphRAG is minimal by design — a triplet extractor, a networkx object, an ego-graph query. The system that popularized the name, from Microsoft Research ([Edge et al., 2024](https://arxiv.org/abs/2404.16130); [open-source implementation](https://github.com/microsoft/graphrag)), goes much further: it clusters the extracted graph into communities and pre-summarizes each one with an LLM, which is aimed at *global* questions like "what are the main themes in this corpus" that neither vector RAG nor our neighborhood queries handle well. And for many workloads, plain vector RAG matches GraphRAG at a fraction of the cost and complexity. The decision rule from the lab holds up: plain LLM for general background, RAG for grounded questions about specific content, GraphRAG when the question — or the research design — is about relationships.
+
+## In research
+
+The quiet headline of this chapter is that the knowledge graph is not just retrieval plumbing — it is a dataset. Social scientists have long built networks from *structured* records: [Fowler (2006)](https://www.cambridge.org/core/journals/political-analysis/article/abs/connecting-the-congress-a-study-of-cosponsorship-networks/B42907E13C3D1F12BBC7618C8E0EECED) mapped cosponsorship networks from 280,000 congressional bills and showed that a legislator's network position predicts legislative influence. Those networks came from metadata, where the edges are given. What LLM extraction changes is that networks can now be built from *text* at scale: who criticizes whom across a campaign's news coverage, which organizations co-appear in protest reporting, who claims to have consulted whom in elite interviews. Event and relation extraction from political text is an established research program with purpose-built pipelines (see [Halterman's work on event extraction](https://andrewhalterman.com/publication/learning-events-from-text/)); the LLM route trades some of that precision for radically lower setup cost, which puts text-derived networks within reach of a seminar paper rather than a grant.
+
+The applications map onto the corpora this book keeps returning to. From **news archives**: actor networks over time — does the opposition fragment before elections? who brokers between blocs? From **parliamentary records**: speech-derived interaction networks (who attacks, who defends, who cites whom) layered on top of the metadata networks like co-sponsorship. From **interview transcripts**: policy networks assembled from "who did you work with on this?" answers, where the graph aggregates dozens of interviews into one advice structure. From **archival and historical text**: correspondence and meeting networks extracted from letters and memoirs. In each case you get two products for one extraction cost: a GraphRAG system for interrogating the corpus, and a network dataset for conventional analysis — centrality, brokerage, community detection. Related designs are appearing in the methods literature, for instance [Political-RAG](https://www.tandfonline.com/doi/abs/10.1080/19331681.2024.2417263) (Arslan, Munawar & Cruz, *Journal of Information Technology & Politics*, 2024), which uses retrieval-augmented generation to extract political information from media content.
+
+The measurement discipline carries over from every coding chapter in this book, with extra teeth. Extraction errors do not stay put: a single wrong entity merge or hallucinated edge propagates into every centrality score computed downstream, so validate the *edges*, not just the final answers — sample extracted triplets, check them against source sentences, report agreement. The broader evidence on LLMs following codebooks is sobering: [Halterman and Keith (2025)](https://www.cambridge.org/core/journals/political-analysis/article/codebook-llms-evaluating-llms-as-measurement-tools-for-political-science-concepts/7B323A0E47F782F2698A0AE849EA00DE) find that off-the-shelf models often fail to follow real political science codebooks zero-shot, and relation extraction is a codebook task. Pin the model version, archive the prompt, and if the network itself is your evidence, consider an open-weight extractor whose weights you can keep — the reproducibility argument from @sec-apis applies twice over when the instrument builds your dataset.
+
+<!-- DRAFT NOTE (Emre): personal angle goes here — the co-sponsorship / elite-network example from your own work or a student project where the extracted graph became the paper. This section reads generic without it. -->
+
+## Further reading
+
+- [Introduction to Knowledge Graphs (Stanford AI Lab)](https://ai.stanford.edu/blog/introduction-to-knowledge-graphs/) — a readable overview of what knowledge graphs are and where they came from.
+- [Edge et al. (2024), "From Local to Global: A Graph RAG Approach to Query-Focused Summarization"](https://arxiv.org/abs/2404.16130) — the paper behind the name; read it to see what community summaries add to the minimal pipeline built here. The [open-source implementation](https://github.com/microsoft/graphrag) is worth a look before you build your own at scale.
+- [Fowler (2006), "Connecting the Congress: A Study of Cosponsorship Networks," *Political Analysis*](https://www.cambridge.org/core/journals/political-analysis/article/abs/connecting-the-congress-a-study-of-cosponsorship-networks/B42907E13C3D1F12BBC7618C8E0EECED) — the classic text-adjacent network study; useful for thinking about what your extracted graph could become.
+- [Halterman & Keith (2025), "Codebook LLMs," *Political Analysis*](https://www.cambridge.org/core/journals/political-analysis/article/codebook-llms-evaluating-llms-as-measurement-tools-for-political-science-concepts/7B323A0E47F782F2698A0AE849EA00DE) — the evidence base for treating extraction prompts as codebooks that require validation.
+- [NetworkX documentation](https://networkx.org/) — the graph library used throughout; the tutorial covers everything this chapter's code touches.
+- [RAG vs. GraphRAG (YouTube)](https://www.youtube.com/watch?v=Aw7iQjKAX2k) — a five-minute visual comparison if you want the intuition before the code.

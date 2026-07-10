@@ -1,63 +1,52 @@
 ---
 title: "LLMs for Social Scientists"
-subtitle: "A Progressive Journey from Fundamentals to Advanced Applications"
+subtitle: "A Working Draft"
 number-sections: false
 ---
 
 # Preface {.unnumbered}
 
-## About This Book
+<!-- DRAFT NOTE (Emre): Claude-drafted from your materials. Rewrite freely — especially the opening two paragraphs, which should sound like you. -->
 
-This book represents the collective knowledge from the **Boston LLMs Initiative for Social Scientists (BLISS)** workshop series. Our mission is to make Large Language Models accessible and useful for social science researchers, while fostering critical discussions about their limitations and biases.
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 This is a working draft.** I am writing this book in the open. Chapters appear here as they become readable, not when they are perfect; each one carries a status badge, and the [roadmap](roadmap.qmd) shows what is drafted, what I have taught before, and what is still to come. If something is unclear, wrong, or missing — tell me in the comments at the bottom of any chapter. That is the point of drafting in public.
+:::
 
-## Why This Book Exists
+Social scientists have always studied things we cannot fully see — institutions, norms, beliefs. Now we work alongside a new kind of opaque object: large language models. We use them to code text, summarize interviews, and simulate respondents, usually without knowing what happens between our prompt and their answer.
 
-Large Language Models are transforming how we conduct research, analyze text, and interact with data. However, many social science researchers find these tools intimidating or inaccessible. This book bridges that gap by providing:
+This book is my attempt to change that, one layer at a time. It grew out of teaching — the BLISS workshops at Northeastern, the AIDE summer bootcamp, and a SICSS-Istanbul lecture on what I call the *anthropology of machines* — and it keeps the spirit of those rooms: everything by hand first, everything connected to a real research task, and honest about what we do and do not know.
 
-- **Progressive learning** from fundamentals to advanced applications
-- **Social science focus** with research-relevant examples
-- **Hands-on practice** with real-world applications
-- **Critical perspective** on limitations and ethical considerations
+## The arc of the book
 
-## Who This Book Is For
+The book moves through four ways of relating to a language model:
 
-This book is designed for social science researchers who want to understand and apply LLMs to their research workflows. Whether you're a graduate student, faculty member, or research professional, this book provides the foundation you need to confidently use LLMs in your work.
+1. **Use** — the plumbing. Running open models with Hugging Face, calling frontier models through APIs, and scaling from one prompt to ten thousand documents (*LLMs in Action*).
+2. **Steer** — getting better answers without touching a single weight: prompting informed by the evidence rather than folklore, and context engineering — RAG, GraphRAG, and research tools you can put in front of colleagues (*Steering LLMs*).
+3. **Read** — mechanistic interpretability: opening the model and observing what happens inside, from the logit lens to sparse autoencoders. This is where social-scientific instincts — coding, interpretation, validity — turn out to matter most (*Reading LLMs*).
+4. **Change** — fine-tuning and adapting models for your own research programs (*Changing LLMs*).
 
-## How This Book Is Organized
+Before all that, *Foundations* builds the conceptual floor — neural networks, embeddings, transformers, attention — by hand, on paper, with numbers small enough to trust. And a *Python refresher* gets you set up if you are coming back to code after a while.
 
-The book follows a progressive structure:
+## Who this is for
 
-**Getting Started**: Foundation and preparation
-**Fundamentals**: Understanding how LLMs work
-**LLMs in Action**: Practical applications and APIs
-**Contextualizing LLMs**: Advanced techniques and complete applications
+Graduate students and researchers in the social sciences who want to use language models seriously: not just prompt them, but understand them well enough to defend a method section. Basic Python helps; no machine learning background is assumed. Every technique in this book is taught against real research tasks — classifying documents, annotating text at scale, building corpora, interrogating what a model represents.
 
-Each chapter builds upon the previous one, ensuring you have a solid foundation before moving to more advanced topics.
+## How to read this draft
 
-## Prerequisites
+- **Status badges.** Every chapter opens with its status: `outline` → `drafted` → `taught` → `revised`. Drafted chapters are real but unpolished; taught chapters have survived contact with a classroom.
+- **Comments.** Each page has a discussion thread at the bottom (via GitHub). You can also [open an issue](https://github.com/tapanyemre/LLMs4SocialScientists/issues/new?template=content-issue.md) or suggest an edit with the links in the sidebar.
+- **Code.** Code is shown, not executed, in the rendered book; companion notebooks are linked from chapters as they are released. Code is MIT-licensed; the text is [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 
-- Basic familiarity with Python (we'll provide refreshers)
-- Willingness to work through mathematical concepts step-by-step
-- Interest in applying AI to social science research
+## About the author
 
-## About the Author
+**Yunus Emre Tapan** is a PhD student in Political Science at Northeastern University, studying social networks and political narratives with computational methods. He is the founder of [BLISS](https://bliss.boston) — the Boston LLMs Initiative for Social Sciences — and has taught LLM methods at the AIDE summer bootcamp and SICSS-Istanbul.
 
-**Yunus Emre Tapan** is the founder of BLISS and a researcher focused on making AI tools accessible to social scientists.
+## Citing this draft
 
-## About BLISS
+> Tapan, Y. E. (2026). *LLMs for Social Scientists* (working draft). https://yemretapan.com/llms4socialscientists
 
-The **Boston LLMs Initiative for Social Scientists (BLISS)** organizes funded workshop series teaching social science researchers how to use large language models in their work, while discussing limitations and biases. Visit [yemretapan.com/bliss](https://yemretapan.com/bliss) for upcoming events and workshops.
+## Acknowledgments
 
-## License
+<!-- DRAFT NOTE (Emre): fill in — Burak Ozturan, NULab, SICSS-Istanbul organizers, AIDE program, workshop participants… -->
 
-This work is licensed under CC BY-NC 4.0: "This license requires that reusers give credit to the creator. It allows reusers to distribute, remix, adapt, and build upon the material in any medium or format, for noncommercial purposes only."
-
-The code in this book is also available under the MIT license. Under the MIT license, you are free to use the code in your own work, so long as you cite the source.
-
----
-
-*This book is a living document that will be updated as the field evolves. We welcome feedback and contributions from the research community.*
-
-## Navigation
-
-**Next:** [Chapter 1: Getting Started →](00-getting-started/01-course-overview.qmd) 
+This book owes its existence to the communities I taught it in first: the **BLISS** community at Northeastern, supported by the NULab for Digital Humanities and Computational Social Science; the **AIDE** summer bootcamp; and **SICSS-Istanbul**.

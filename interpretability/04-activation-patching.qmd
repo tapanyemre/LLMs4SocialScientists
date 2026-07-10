@@ -1,0 +1,19 @@
+# Activation Patching {#sec-activation-patching}
+
+::: {.callout-important appearance="simple" icon="false"}
+**📋 Status: `planned`** — this chapter is on the roadmap but not yet written. The outline below is the current plan; if this topic matters to your research, say so in the comments and it moves up the queue.
+:::
+
+The previous chapters were about *observing* a model without touching it — the ethnography of the machine. This chapter begins the second tradition: **intervention**. Activation patching asks the causal question observation cannot answer: if we swap this internal state for another, does the behavior change?
+
+## Planned coverage
+
+- From correlation to causation inside a network: why reading the residual stream is not enough
+- The core recipe: run the model on a *clean* and a *corrupted* input, then patch activations from one run into the other, layer by layer and position by position
+- Locating where a fact "lives": causal tracing
+- What this offers social science: auditing *why* a model classified a text the way it did, not just *that* it did
+- Tooling and a hands-on exercise
+
+## In the meantime
+
+- @sec-why-interpretability frames the observe/intervene distinction this chapter builds on.

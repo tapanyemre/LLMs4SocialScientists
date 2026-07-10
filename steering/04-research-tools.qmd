@@ -1,0 +1,278 @@
+# Building Research Tools {#sec-research-tools}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+By now you can do something real. You can send a parliamentary speech to a model and get back a stance label with an evidence quote (@sec-apis), run that over ten thousand documents without losing a night's work (batch processing, @sec-batch), and ground the model's answers in your own corpus (RAG, @sec-rag). But all of it lives in a notebook, and the notebook only runs for you. Your coauthor — the country expert who actually knows whether a Bundestag speech is hedging or dog-whistling — cannot test your codebook without asking you to run cells. Every disagreement about a label becomes an email thread with screenshots. The pipeline works; the collaboration doesn't.
+
+This chapter closes that gap. You will wrap the annotation pipeline in a web interface with [Gradio](https://www.gradio.app/guides/), a Python library that turns a function into a web page in about six lines, and then deploy it for free on Hugging Face Spaces so it has a URL your coauthor can open on their phone. Along the way we work out what a *research* tool owes its users that an ordinary demo does not: provenance, honest uncertainty, and a download button. The methods in this book are solitary until this chapter. Here they become social.
+
+## A tool is a function with a front door
+
+Strip away the web page and a Gradio app is three things: a Python function, a declaration of what goes in, and a declaration of what comes out. That is the whole conceptual content of this chapter. If you wrote an `annotate(speech)` function in the APIs chapter, you have already done the hard part — Gradio just builds the door.
+
+This is worth pausing on, because it changes how you write pipeline code. A function that takes a string and returns a string can become a tool in one step. A notebook cell that reads a global dataframe, mutates it in place, and prints to stdout cannot. The discipline of "one function, clear inputs, clear outputs" that made batch processing clean is the same discipline that makes tools possible. You are not learning a new skill here; you are cashing in on one.
+
+## Design it on paper first
+
+Before any code, answer six questions on paper. Small tools fail not because the code is wrong but because the builder never decided who the tool was for. Here is the exercise for our running example, the immigration stance coder:
+
+| Question | Answer for the stance coder |
+|---|---|
+| Who uses it? | My coauthor: domain expert, does not code |
+| What goes in? | One speech, pasted as text (later: a CSV of speeches) |
+| What comes out? | Stance label, the model's confidence, an evidence quote |
+| What must they trust? | That the label follows *our* codebook, not the model's whims |
+| So what must they see? | The codebook version, the model name, the evidence for each label |
+| What do they do with it? | Test edge cases, flag disagreements, download results for our next meeting |
+
+Two of these rows do most of the work. "What must they see" is where research tools diverge from chatbots — a chatbot hides the machinery, a research tool exposes it, because your coauthor is not a consumer of the label, they are its auditor. And "what do they do with it" tells you the tool is not the end of the pipeline: if results cannot leave the tool as a file, the tool is a toy.
+
+<!-- DRAFT NOTE (Emre): the paper-sketch exercise works well live in class — students sketch a tool for their own project in 5 minutes, then swap and critique. Add the classroom framing here if you keep that exercise. -->
+
+## Text in, text out
+
+Install Gradio (`pip install gradio` — in Colab, it is one cell). The minimal tool wraps the one-word classifier from the APIs chapter. `SYSTEM` and `openai_client` are the same objects you built there:
+
+```{python}
+import gradio as gr
+
+def annotate(speech):
+    r = openai_client.chat.completions.create(
+        model="gpt-5-mini",        # gpt-5 series: temperature not accepted
+        messages=[{"role": "system", "content": SYSTEM},
+                  {"role": "user", "content": f"Speech: '{speech}'"}],
+    )
+    return r.choices[0].message.content
+
+demo = gr.Interface(
+    fn=annotate,
+    inputs=gr.Textbox(lines=6, label="Paste a speech"),
+    outputs=gr.Textbox(label="Stance"),
+    title="Immigration Stance Coder (v0.1)",
+    description="Codes a parliamentary speech as restrictive, expansive, or neutral. "
+                "Codebook v3, gpt-5-mini. "
+                "For codebook testing — not for final coding.",
+)
+
+demo.launch(share=True)
+```
+
+Run the cell and two things happen. The interface renders right inside the notebook, and because of `share=True`, Gradio prints a public URL of the form `https://xxxx.gradio.live`. Anyone with that link can use your tool — no installation, no Python, no account. The link is a tunnel to your running notebook, so it dies when your Colab session does, and [share links expire after a week](https://www.gradio.app/guides/sharing-your-app) regardless. That is fine for today's purpose: you can send your coauthor a working tool *during the meeting where you argue about the codebook*.
+
+Notice what went into `description`. The codebook version, the model, and a statement of what the tool is *not* for. This costs one line and it is the difference between a research instrument and a mystery box. Your methods section will need these facts anyway; putting them in the interface means every user sees them on every visit.
+
+## More inputs, more honest outputs
+
+A one-word label is a demo. Your coauthor needs more: which model produced the label, how sure it was, and what part of the speech justifies it. In the APIs chapter you built structured output for exactly this — a JSON object with `stance`, `confidence`, and `evidence` — and three functions (`ask_openai`, `ask_anthropic`, `ask_open_model`) that run the same prompt on OpenAI, Anthropic, and an open-weight model through OpenRouter. Assume you have upgraded all three to return the JSON annotation and to pass through `parse_annotation`, which returns `None` on malformed output. The multi-input tool is then a dropdown and a dispatch dictionary:
+
+```{python}
+CODERS = {
+    "GPT-5 mini (OpenAI)": ask_openai,
+    "Claude Haiku 4.5 (Anthropic)": ask_anthropic,
+    "Llama 3.3 70B (open weights, via OpenRouter)": ask_open_model,
+}
+
+def annotate(speech, coder_name):
+    if not speech.strip():
+        raise gr.Error("Paste a speech first.")
+    ann = parse_annotation(CODERS[coder_name](speech))
+    if ann is None:
+        raise gr.Error("The model returned malformed output. "
+                       "Try again, or switch models.")
+    return ann["stance"], ann["confidence"], ann["evidence"]
+
+demo = gr.Interface(
+    fn=annotate,
+    inputs=[
+        gr.Textbox(lines=6, label="Paste a speech"),
+        gr.Dropdown(choices=list(CODERS), value="GPT-5 mini (OpenAI)",
+                    label="Model"),
+    ],
+    outputs=[
+        gr.Textbox(label="Stance"),
+        gr.Textbox(label="Self-reported confidence (not a calibrated probability)"),
+        gr.Textbox(label="Evidence quote — check it actually appears in the speech"),
+    ],
+    title="Immigration Stance Coder (v0.2)",
+    examples=[
+        ["We cannot keep pretending the current rate of arrivals is "
+         "sustainable while our housing waiting lists grow year on year.",
+         "GPT-5 mini (OpenAI)"],
+    ],
+)
+
+demo.launch(share=True)
+```
+
+<!-- DRAFT NOTE (Emre): model names churn — verify the three model strings against the APIs chapter at publication and keep them in sync. -->
+
+Three details are doing quiet work. `gr.Error` turns a Python exception into a polite red box in the interface instead of a stack trace — validate inputs and fail with instructions, because your coauthor cannot read a traceback. The `examples` row gives first-time users a one-click way to see what the tool does before risking their own text; every research tool should ship with one worked example. And the output labels editorialize on purpose: "not a calibrated probability" and "check it actually appears in the speech" are the honest warnings from the APIs chapter, moved into the interface where the person who needs them will actually read them. A label is a reading, not a proof, and the tool should say so.
+
+The dropdown also buys you something methodological for free. Your coauthor can now run the same hard case through three models and watch them disagree — the multi-model comparison habit from the APIs chapter, no longer gated on knowing Python.
+
+## Files in, files out
+
+Pasting speeches one at a time is for arguing about edge cases. For real work, your coauthor has a CSV. The pattern: upload a file, annotate each row with a progress bar, return a preview and a downloadable result.
+
+```{python}
+import pandas as pd
+
+MAX_ROWS = 200   # this is a demo tool, not the batch pipeline
+
+def annotate_csv(file, text_column, coder_name, progress=gr.Progress()):
+    df = pd.read_csv(file)                      # gr.File hands you a filepath
+    if text_column not in df.columns:
+        raise gr.Error(f"No column named '{text_column}'. "
+                       f"This file has: {', '.join(df.columns)}")
+    if len(df) > MAX_ROWS:
+        raise gr.Error(f"This tool caps runs at {MAX_ROWS} rows. "
+                       "For full corpora we use the batch pipeline — ask me.")
+
+    rows = []
+    for text in progress.tqdm(df[text_column], desc="Coding"):
+        ann = parse_annotation(CODERS[coder_name](str(text)))
+        rows.append(ann or {"stance": None, "confidence": None, "evidence": None})
+
+    df["stance"]     = [r["stance"] for r in rows]
+    df["confidence"] = [r["confidence"] for r in rows]
+    df["evidence"]   = [r["evidence"] for r in rows]
+    df["model"]      = coder_name                 # provenance travels with the data
+    df["codebook"]   = "v3"
+
+    out_path = "annotated.csv"
+    df.to_csv(out_path, index=False)
+    return df.head(20), out_path
+
+demo = gr.Interface(
+    fn=annotate_csv,
+    inputs=[
+        gr.File(label="CSV of speeches", file_types=[".csv"]),
+        gr.Textbox(value="text", label="Name of the text column"),
+        gr.Dropdown(choices=list(CODERS), value="GPT-5 mini (OpenAI)",
+                    label="Model"),
+    ],
+    outputs=[
+        gr.Dataframe(label="Preview (first 20 rows)"),
+        gr.File(label="Download the full annotated CSV"),
+    ],
+    title="Immigration Stance Coder — batch (v0.3)",
+)
+
+demo.launch(share=True)
+```
+
+The shape of this function should look familiar — it is the annotation loop from @sec-batch with a progress bar bolted on. `gr.Progress` with `progress.tqdm(...)` renders a live progress bar in the browser, which matters more than it sounds: a tool that goes silent for four minutes gets closed at minute one. Failed annotations become `None` rows instead of crashes, exactly as in the batch chapter. And note the two provenance columns appended before saving — when this CSV surfaces in a coauthor's inbox in six months, it will still say which model and which codebook produced it.
+
+The row cap deserves a word. A shared tool with your API key behind it should not run unbounded jobs, both for cost (arithmetic below) and because a 10,000-row job belongs in the checkpointed batch pipeline, not a browser tab that might close. Caps with a message pointing at the right tool are a design feature, not a limitation.
+
+## When `Interface` runs out: Blocks
+
+`gr.Interface` is one function, inputs on the left, outputs on the right. For anything with layout — two functions, results that feed a second step, a search box above a results table — Gradio has [`gr.Blocks`](https://www.gradio.app/guides/blocks-and-event-listeners): you place components yourself and wire events to functions. Here is a front end for a retrieve-then-generate pipeline built exactly the way @sec-rag builds one — the same embed, retrieve, and generate steps, pointed at an interview archive instead of the speech corpus, and wrapped in a single function `search_archive(query)` that returns a generated answer plus the retrieved passages it was built from:
+
+```{python}
+with gr.Blocks(title="Interview Archive Search") as demo:
+    gr.Markdown(
+        "## Interview archive search\n"
+        "Searches 42 anonymized transcripts from the 2025 fieldwork. "
+        "**Answers are generated** from the passages below — read the "
+        "passages, not just the answer. Embeddings: all-MiniLM-L6-v2; "
+        "generation: claude-sonnet-4-5, temperature 0."
+    )
+    with gr.Row():
+        query = gr.Textbox(label="Ask a question", scale=4,
+                           placeholder="e.g., How do respondents describe their first contact with the asylum office?")
+        go = gr.Button("Search", variant="primary", scale=1)
+
+    answer = gr.Markdown()
+    passages = gr.Dataframe(
+        label="Retrieved passages — the only evidence behind the answer",
+        headers=["interview", "passage", "similarity"],
+    )
+
+    go.click(fn=search_archive, inputs=query, outputs=[answer, passages])
+    query.submit(fn=search_archive, inputs=query, outputs=[answer, passages])
+```
+
+The structure is readable even before you know the API: components are created inside the `with` block, laid out top to bottom (and side by side inside `gr.Row`), and `go.click(...)` wires the button to the function. The `query.submit` line wires the Enter key to the same function — small, and the first thing a user will try.
+
+The design decision that matters is the `passages` table. A RAG tool that shows only the generated answer trains your labmates to trust prose the model wrote. Showing the retrieved passages — with source interview and similarity score — makes the tool's epistemics visible: this answer came from *these* passages and nowhere else. If the passages are off-topic, the user learns to distrust the answer, which is exactly what they should learn.
+
+## What a research tool owes its users
+
+Generic usability advice exists and is good — the [Nielsen Norman Group's ten heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/) are the standard checklist. But research tools have obligations beyond usability, and the examples above have been quietly following four rules:
+
+**Show provenance.** Model name and version, prompt or codebook version, retrieval sources. In the interface, not just the paper. If the output is a file, the provenance travels inside the file as columns.
+
+**Expose uncertainty instead of laundering it.** Confidence fields labeled as self-reports, evidence quotes flagged for verification, "answers are generated" warnings on RAG output. A clean interface makes model output look more authoritative than a notebook cell does — that is a bias your design must push against, because your users will include people with no intuition for how these models fail.
+
+**Let everything leave.** Every result downloadable, in a format a spreadsheet opens. The tool is a stop on the pipeline, not a destination. If your coauthor's disagreements with the model cannot be exported, they cannot become the validation analysis in your paper.
+
+**Fail politely and specifically.** Validate inputs before spending tokens. Error messages say what happened and what to do next ("No column named 'text'. This file has: ..."). Assume the person reading the error has never seen a stack trace and never should.
+
+::: {.callout-tip}
+Version the tool itself — `v0.1`, `v0.2` in the title, matching a dated note of what changed. When your coauthor says "last week it coded this speech differently," you need to know whether the model, the prompt, or the tool changed. Treat the tool like any other research artifact: it has versions, and results cite them.
+:::
+
+## Putting it on the web: Hugging Face Spaces
+
+Share links die with your notebook. For a tool that outlives your Colab session, deploy it to [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces), which hosts Gradio apps for free on a basic CPU — no server administration, no billing setup for the hosting itself. A Space is just a small git repository with two files:
+
+```
+immigration-stance-coder/
+├── app.py            # everything above, ending in demo.launch()
+└── requirements.txt  # gradio, openai, anthropic, pandas
+```
+
+Two ways to get it there. From a terminal, `gradio deploy` in the app directory walks you through creating the Space and uploads the files; re-running it updates the Space. Or do it in the browser: create a new Space at huggingface.co, choose the Gradio SDK, and upload the two files. Either way you get a permanent URL like `huggingface.co/spaces/yourname/immigration-stance-coder` within a few minutes.
+
+One thing changes in the code. On Spaces there is no Colab Secrets panel; keys live in the Space's settings under **Variables and secrets** and reach your code as environment variables. A loader that works in both places:
+
+```{python}
+import os
+
+def get_key(name):
+    try:
+        from google.colab import userdata     # in Colab
+        return userdata.get(name)
+    except ImportError:                       # on Spaces or your machine
+        return os.environ[name]
+```
+
+The rule from the APIs chapter still binds, harder than ever: the key goes in the secrets panel, never in `app.py`. A Space's files are typically public — a key committed there is a key stolen.
+
+Now the part nobody warns you about. A public Space with your API key behind it means *strangers spend your money*. Do the arithmetic before you deploy, with the per-click token counts from the APIs chapter (about 700 tokens in, 80 out for one stance annotation) and the same placeholder prices used there:
+
+| Who clicks | Clicks | Small model (\$0.25 / \$1.00 per 1M) | Frontier model (\$3 / \$15 per 1M) |
+|---|---:|---:|---:|
+| Coauthor testing the codebook | 200 | \$0.05 | \$0.66 |
+| Seminar of 30, twenty clicks each | 600 | \$0.15 | \$2.00 |
+| Link escapes to social media | 100,000 | \$26 | \$330 |
+
+<!-- DRAFT NOTE (Emre): same placeholder-price caveat as the APIs chapter — recheck magnitudes at publication. Also: if you have a real story of a demo link escaping (yours or a colleague's), it belongs here. -->
+
+The first two rows say tools for collaborators are effectively free — deploy without anxiety. The last row says a *public* tool needs a control. The controls, cheapest first: make the Space **private** and grant access to named Hugging Face accounts (right for coauthors and labs, and mandatory the moment IRB-covered data is anywhere near the tool); add password protection with `demo.launch(auth=("lab", "our-password"))`; keep the row caps and the small model for anything world-readable; and put a spending limit on the API key's account, which every provider dashboard supports.
+
+::: {.callout-warning}
+Deployment changes your data-protection situation, not just your hosting. A transcript pasted into your Space travels to the Space's servers *and* to the model provider's — and if the Space is public, anyone can paste anything, including data you never agreed to process. For interview data under an IRB protocol, the safe defaults are a private Space, named users only, and a sentence in the interface saying what happens to submitted text. When in doubt, keep the tool local: the tools in this chapter all run on your own machine with plain `demo.launch()`, no cloud involved.
+:::
+
+## In research
+
+The quiet finding of the last few years of LLM-assisted research is that the bottleneck moved. Getting labels is cheap; agreeing on what the labels *mean* is not. That is a collaboration problem, and tools are how you work it. A codebook-annotation demo — the stance coder above, private Space, coauthors as named users — turns codebook development from serial emails into parallel testing: your country expert probes edge cases the night before the meeting, downloads the CSV of model calls they disagree with, and the meeting starts from a table of disagreements instead of a blank page. The same tool, row caps and all, is what you hand a new RA on day one: it *is* the codebook, executable.
+
+For a lab sitting on interview or focus-group data, the Blocks search tool changes who can ask questions of the corpus. Without it, every "did anyone mention remittances?" query routes through the one student who built the embeddings. With it, the PI and every RA search the archive themselves — and because the interface shows retrieved passages rather than just generated answers, they are always one click from the primary text, which is where qualitative researchers need to end up anyway. The privacy constraints are real (private Space, anonymized transcripts, IRB sign-off on the hosting arrangement), but they are the same constraints the data already lived under; the tool just forces you to write them down.
+
+The third audience is a classroom. A deployed Space needs no installation, no API key per student, and no Python — thirty students can probe the same model with the same codebook in the first ten minutes of a seminar, and the inevitable disagreements between models become the discussion. This is also the honest way to teach what these methods are: students who *use* a stance coder that shows its evidence quotes learn faster than students who are told LLMs are unreliable — they catch a fabricated quote themselves by week two.
+
+<!-- DRAFT NOTE (Emre): BLISS demo story goes here — which tool you actually deployed for the group, what broke, what people used it for that you didn't expect. This section needs the lived example. -->
+
+There is also a professional payoff worth naming plainly. A deployed tool is a research output people can touch. Reviewers can test your annotation procedure instead of imagining it from a prompt in the appendix; a Space URL in the replication materials is a stronger transparency claim than a code dump. None of this substitutes for validation — the tool makes your procedure inspectable, not correct — but inspectable is the standard the field is converging on, and it costs you two files and an afternoon.
+
+## Further reading
+
+- [Gradio guides](https://www.gradio.app/guides/) — start with the [quickstart](https://www.gradio.app/guides/quickstart), then [Blocks and event listeners](https://www.gradio.app/guides/blocks-and-event-listeners) when `Interface` stops being enough.
+- [Sharing your app (Gradio)](https://www.gradio.app/guides/sharing-your-app) — share links, Spaces deployment via `gradio deploy`, and authentication options, in one page.
+- [Hugging Face Spaces documentation](https://huggingface.co/docs/hub/spaces) — hosting, private Spaces, secrets, and hardware upgrades if your tool ever needs a GPU.
+- [Nielsen Norman Group, "10 Usability Heuristics for User Interface Design"](https://www.nngroup.com/articles/ten-usability-heuristics/) — the classic general-purpose checklist; read it once and you will see violations everywhere, including in your own tools.

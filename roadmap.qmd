@@ -1,0 +1,46 @@
+---
+title: "Roadmap"
+number-sections: false
+---
+
+# Roadmap {.unnumbered}
+
+This book is written in public, chapter by chapter. This page is the honest map: what exists, what state it is in, and what is coming. It changes as the book grows.
+
+**Status legend**
+
+| Badge | Meaning |
+|---|---|
+| `outline` | Structure and sources decided; prose not yet written |
+| `drafted` | Full draft exists; awaiting my revision — read with that in mind |
+| `taught` | Material has been taught in a workshop or lecture at least once |
+| `revised` | Revised after teaching and feedback; stable |
+| `planned` | On the roadmap; tell me in the comments if you want it sooner |
+
+## Current state
+
+| Part | Chapter | Status | Taught at |
+|---|---|---|---|
+| Python Refresher | Python for Text Analysis | `drafted` | AIDE 2025 |
+| Foundations | Neural Networks by Hand | `drafted` | AIDE 2025, BLISS |
+| Foundations | Embeddings: Concepts as Vectors | `drafted` | AIDE 2025, SICSS-Istanbul 2026 |
+| Foundations | Transformers & Attention by Hand | `drafted` | AIDE 2025, BLISS |
+| LLMs in Action | Open Models with Hugging Face | `drafted` | AIDE 2025 |
+| LLMs in Action | Working with APIs | `drafted` | AIDE 2025 |
+| LLMs in Action | Batch Processing at Research Scale | `drafted` | AIDE 2025 |
+| Steering LLMs | Prompting, Informed by the Literature | `drafted` | — |
+| Steering LLMs | Retrieval-Augmented Generation | `drafted` | AIDE 2025 |
+| Steering LLMs | GraphRAG: Adding Structure | `drafted` | AIDE 2025 |
+| Steering LLMs | Building Research Tools | `drafted` | BLISS |
+| Reading LLMs | Why Interpretability? An Anthropology of Machines | `drafted` | SICSS-Istanbul 2026 |
+| Reading LLMs | The Logit Lens | `drafted` | SICSS-Istanbul 2026 |
+| Reading LLMs | Sparse Autoencoders & Features | `drafted` | SICSS-Istanbul 2026 |
+| Reading LLMs | Activation Patching | `planned` | — |
+| Reading LLMs | Circuits | `planned` | — |
+| Changing LLMs | Fine-Tuning for Research | `planned` | — |
+
+*(Chapters marked `drafted` are being revised for publication here — they appear in this public version as they are ready.)*
+
+## How chapters get here
+
+Each chapter follows the same path: I teach the material somewhere → the teaching materials become a draft → the draft is revised in my own words → it is published here with comments open → your feedback shapes the revision. If a `planned` chapter matters to your research, say so in the comments below — it genuinely affects what I write next.

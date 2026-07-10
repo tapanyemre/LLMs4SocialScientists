@@ -1,0 +1,228 @@
+# Transformers and Attention by Hand {#sec-transformers}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you are coding parliamentary speeches for corruption allegations. A keyword search finds every speech containing *corruption* — but it cannot tell "the minister denied corruption" from "the court proved corruption." Same word, opposite coding decision. What distinguishes the two is not the word; it is the company the word keeps in that particular sentence. Any method that assigns one fixed meaning to *corruption* — a dictionary, a bag-of-words classifier, even the static embeddings from @sec-embeddings — will mix your categories.
+
+The transformer is the architecture that solved this problem, and it is the architecture inside every model in this book: BERT, GPT, Claude, Llama. Its core mechanism, **self-attention**, lets every word update its representation using the other words around it — so that by the time the model is done reading, *corruption* in a denial and *corruption* in a conviction are different vectors. In this chapter you will compute self-attention by hand, with numbers small enough to check on paper. Then you will see how attention stacks into a full model, and what that model is actually trained to do. The answer to that last question is shorter than you expect.
+
+## The problem attention solves
+
+In @sec-embeddings every word got one vector, learned once, fixed forever. That already buys you a lot: similarity, analogies, clustering. But it has a built-in flaw. *Strike* gets one vector whether workers or missiles are involved. *Sanction* gets one vector whether Congress is approving or punishing. Linguists call this polysemy; for us it is a measurement problem.
+
+The fix is conceptually simple. Do not stop at the fixed vector. Let each word look at the other words in its sentence and pull their information into its own representation. After that update, the vector at the position of *corruption* is no longer the dictionary entry — it is *corruption-in-this-sentence*. That looking-and-pulling operation is self-attention, and the transformer ([Vaswani et al. 2017](https://arxiv.org/abs/1706.03762)) is, at heart, a machine that applies it over and over. The whole mechanism is three steps you already know: dot products, a softmax, and a weighted average.
+
+## Self-attention by hand
+
+### The setup
+
+Take a four-token sentence from our running example:
+
+> the minister denied corruption
+
+Real models represent each token with hundreds or thousands of dimensions. We will use two, so every number fits on the page. I invented these embeddings; read the first dimension loosely as "institutional actor" content and the second as "accusation" content.
+
+| Token | $d_1$ (institutional) | $d_2$ (accusation) |
+|---|---|---|
+| the | 0.1 | 0.0 |
+| minister | 1.0 | 0.2 |
+| denied | 0.4 | 0.9 |
+| corruption | 0.8 | 1.0 |
+
+Two honesty notes. First, real embedding dimensions do not come with labels like "institutional" — they are learned, entangled, and mostly unreadable, which is exactly what the interpretability part of this book (starting in @sec-why-interpretability) is about. Second, everything below works identically in 2 dimensions and in 4,096; the small case is the real case, just shorter.
+
+### Step 1 — scores: every word looks back
+
+Each token asks: how relevant is every other token to me? The transformer's measure of relevance is the dot product — multiply the vectors dimension by dimension and sum, the same similarity logic as the embeddings chapter.
+
+One rule before we compute: in a GPT-style model, a token may only look at itself and the tokens *before* it. The model's job is to predict what comes next, so letting a token peek ahead would be cheating. This is the **causal mask** — the blanked cells below. (Hold that thought; it becomes the BERT/GPT split later.)
+
+Here is every allowed dot product, query token in the rows, key token in the columns:
+
+| query ↓ / key → | the | minister | denied | corruption |
+|---|---|---|---|---|
+| the | 0.01 | — | — | — |
+| minister | 0.10 | 1.04 | — | — |
+| denied | 0.04 | 0.58 | 0.97 | — |
+| corruption | 0.08 | 1.00 | 1.22 | 1.64 |
+
+Check one yourself: *corruption* looking at *denied* is $0.8 \times 0.4 + 1.0 \times 0.9 = 0.32 + 0.90 = 1.22$. If you can verify that cell, you understand the step.
+
+### Step 2 — from scores to weights
+
+Raw scores are not usable yet: they can be any size, and we want each row to be a proper set of proportions. Two operations fix this. We will work the *corruption* row — the last position, the one a GPT would use to predict the next word.
+
+**Scale.** Divide each score by $\sqrt{d}$, where $d$ is the vector dimension — here $\sqrt{2} \approx 1.41$. This is bookkeeping, not magic: in high dimensions dot products grow large, and huge scores would make the next step collapse onto a single winner. Scaled scores for the *corruption* row: 0.06, 0.71, 0.86, 1.16.
+
+**Softmax.** Exponentiate each scaled score and divide by the sum — the same trick used for classifier outputs in @sec-neural-networks. It turns any list of numbers into positive weights that sum to 1.
+
+| key | scaled score | $e^{\text{score}}$ | weight |
+|---|---|---|---|
+| the | 0.06 | 1.06 | 0.12 |
+| minister | 0.71 | 2.03 | 0.23 |
+| denied | 0.86 | 2.36 | 0.27 |
+| corruption | 1.16 | 3.19 | 0.37 |
+| **sum** | | **8.64** | **1.00** (rounding) |
+
+Read the weight column as a budget: to build its updated representation, *corruption* spends 37% of its attention on itself, 27% on *denied*, 23% on *minister*, and almost nothing on *the*. Function words getting ignored is not something anyone programmed — it falls out of the geometry.
+
+### Step 3 — the update: a weighted average
+
+Now *corruption* rebuilds its vector as the weighted average of everyone it attended to, dimension by dimension:
+
+$$d_1 = 0.12(0.1) + 0.23(1.0) + 0.27(0.4) + 0.37(0.8) = 0.65$$
+$$d_2 = 0.12(0.0) + 0.23(0.2) + 0.27(0.9) + 0.37(1.0) = 0.66$$
+
+The vector at the *corruption* position moved from $(0.8, 1.0)$ to roughly $(0.65, 0.66)$ — pulled toward *minister* and *denied*. It is no longer the generic word. It now encodes *corruption, as denied by an official* — which is precisely the information your coding decision needed. Run the same sentence with *proved* in place of *denied* and this vector lands somewhere else. One mechanism, and the polysemy problem from the embeddings chapter is gone.
+
+That is self-attention. Dot products, softmax, weighted average. Everything else in this chapter is scaffolding around those three steps.
+
+::: {.callout-tip}
+Rebuild this computation in a spreadsheet — four rows, two columns, maybe twenty minutes. Change one embedding and watch every weight shift. In my experience this is the single highest-return exercise in the whole foundations part: once you have made the softmax row sum to 1 with your own hands, the transformer stops being a diagram and becomes arithmetic.
+:::
+
+<!-- DRAFT NOTE (Emre): this is where your AIDE Lab 7 classroom story could go — how the paper-and-pencil self-attention exercise landed with philosophers, what they got stuck on. -->
+
+### Queries, keys, values
+
+I simplified one thing: I let each token's raw embedding play every role. In a real transformer, each embedding is first multiplied by three learned matrices, producing three different vectors per token:
+
+- a **query** — what this token is looking for,
+- a **key** — what this token offers to others,
+- a **value** — what this token actually hands over if attended to.
+
+Scores are query·key; the weighted average is taken over values. Why bother? Because raw similarity is the wrong question. In our table, *denied* attends mostly to itself (0.97), since nothing else resembles it. But a verb should be hunting for its *subject* — who did the denying — and its subject does not look like it at all.
+
+The learned matrices fix this, and you can see how with one small change. Give *denied* a query matrix that swaps its two dimensions: its query becomes $(0.9, 0.4)$ instead of $(0.4, 0.9)$. Recompute its scores against the same keys:
+
+| key | score with raw query $(0.4, 0.9)$ | score with learned query $(0.9, 0.4)$ |
+|---|---|---|
+| the | 0.04 | 0.09 |
+| minister | 0.58 | **0.98** |
+| denied | **0.97** | 0.72 |
+
+With the swapped query, *denied* now attends hardest to *minister* — its grammatical subject. That is what the query/key/value machinery buys: a token can ask for something other than what it is. The model learns these matrices from data; nobody tells it that verbs should find subjects. The full formula you will meet everywhere, $\text{Attention}(Q, K, V) = \text{softmax}\!\left(QK^\top / \sqrt{d_k}\right)V$, is nothing but our three steps written for all positions at once.
+
+## Many heads, one layer
+
+One attention operation can track one kind of relationship at a time. Sentences have many: who did what to whom, what negates what, which pronoun refers to which entity, what topic is in play. So transformers run many attention operations in parallel — each with its own small query/key/value matrices, each free to specialize. These are **attention heads**, and a layer might have 12 to 100 of them.
+
+Think of heads as readers with different assignments going through the same speech: one tracks grammatical roles, one tracks negation, one tracks which actors have been mentioned. Each produces its own updated vectors; the layer concatenates them and mixes them back together. No head is told its job — specializations emerge in training, and figuring out what a given head actually does is an open research problem, not a lookup ([Ferrando et al. 2024](https://arxiv.org/abs/2405.00208) survey what is known).
+
+One more gap to close: nothing in our arithmetic used word order. "The minister denied corruption" and "corruption denied the minister" would produce identical dot products, and those are rather different news days. Transformers fix this by injecting position information into the vectors before attention runs — so "being the third token" is part of what a query and key can match on. The implementations vary; the point is only that order enters through the embeddings, not through the attention formula itself.
+
+## The residual stream: the model's running notes
+
+Now stack it. A full transformer is the same block repeated: an attention step, then a small feed-forward network — the MLP from @sec-neural-networks — applied to each position. A small model has a dozen such layers; frontier models have on the order of a hundred.
+
+Here is the framing I find most useful, and the one that pays off later in the book. Every layer reads from and writes to a single shared channel that runs from the input to the output — researchers call it the **residual stream**. Each attention output and each MLP output is *added* to what is already there; nothing is erased. Think of it as the model's running notes on your sentence. At the position of *corruption*, the notes start as just the token embedding plus its position. An early attention layer adds "part of a denial." An MLP layer adds things the model memorized in training about ministers and corruption scandals. A later layer adds "the plausible next words here are about rejecting allegations." By the top of the stack, the notes at the final position have become the model's answer — its prediction for the next token.
+
+The final step is almost anticlimactic: multiply the top of the residual stream by one last matrix to get a score for every token in the vocabulary — 50,000 to 250,000 of them — and softmax those scores into a probability distribution. The model's entire output is that distribution. Given "The minister denied the corruption ___", it might put 0.31 on *allegations*, 0.22 on *charges*, 0.11 on *claims*, and tiny slivers on everything else, down to fragments of Finnish. Generation is just sampling from this distribution, appending the winner, and running the whole stack again.
+
+This framing matters because the running notes are *readable*. If every layer only adds to a shared stream, you can tap the stream between layers and ask: what would the model predict from its notes so far? You can literally watch an answer form across depth — early layers holding vague guesses, later layers sharpening them. That technique, the logit lens, gets its own chapter later in the book, and it is the reason this part keeps insisting on the residual-stream picture: it turns the architecture into a *site you can do fieldwork in*, which is the entire premise of the interpretability part (starting in @sec-why-interpretability).
+
+<!-- DRAFT NOTE (Emre): the "running notes" framing is lifted from your SICSS-Istanbul talk (Phase 3). You may want to link the talk here, or keep the anthropology framing for the interpretability part's opener. -->
+
+## Watching it in code
+
+You can verify everything above on a real model in a Colab notebook. First, next-token prediction with a small open model via Hugging Face (details of the library come in @sec-huggingface):
+
+```{python}
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
+model_name = "gpt2"  # small and fast; try "HuggingFaceTB/SmolLM2-135M" for a modern equivalent
+tok = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    attn_implementation="eager",  # needed to get attention weights back
+)
+
+sentence = "The minister denied the corruption"
+inputs = tok(sentence, return_tensors="pt")
+with torch.no_grad():
+    out = model(**inputs, output_attentions=True)
+
+# The model's entire output: a distribution over the next token
+probs = torch.softmax(out.logits[0, -1], dim=-1)
+top = torch.topk(probs, k=5)
+for p, idx in zip(top.values, top.indices):
+    print(f"{tok.decode(idx)!r}: {p:.3f}")
+```
+
+And the attention weights themselves — the same kind of table you just computed by hand, one per head per layer:
+
+```{python}
+tokens = tok.convert_ids_to_tokens(inputs["input_ids"][0])
+layer, head = 5, 4                     # pick any; gpt2 has 12 layers x 12 heads
+weights = out.attentions[layer][0, head]  # (seq_len, seq_len), rows sum to 1
+
+# Where does the last token spend its attention budget?
+for t, w in zip(tokens, weights[-1]):
+    print(f"{t:>12}  {w:.2f}")
+```
+
+Frontier models served over APIs will not show you their attention weights, but most will show you the final distribution, which is often what a research design needs. With the OpenAI client — pointed here at OpenRouter, so the same code reaches open models; @sec-apis covers the setup — you can request log probabilities:
+
+```{python}
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",  # to call OpenAI instead, drop this line and use an OpenAI model name and key
+    api_key="YOUR_OPENROUTER_KEY",
+)
+
+resp = client.chat.completions.create(
+    model="meta-llama/llama-3.1-8b-instruct",
+    messages=[{"role": "user", "content": "Complete with one word: The minister denied the"}],
+    max_tokens=1,
+    logprobs=True,
+    top_logprobs=5,
+)
+
+for cand in resp.choices[0].logprobs.content[0].top_logprobs:
+    print(f"{cand.token!r}: {cand.logprob:.2f}")
+```
+
+Not every provider exposes this — Anthropic's API, for instance, returns text without token probabilities — which is worth knowing before you build a design around logprobs.
+
+## Two families: encoders and decoders
+
+The original 2017 transformer had two halves, built for translation: an **encoder** that read the source sentence and a **decoder** that wrote the translation. The two halves became two families, and you will meet both in this book.
+
+**Encoder-only** models — BERT and its descendants — drop the mask. Every token attends in both directions, left and right, because the goal is not to continue the text but to *understand* it: the model trains by guessing masked-out words from their full context. This yields excellent contextual representations, which is why encoders remain the workhorses for classification, measurement, and the embedding pipelines you will build in @sec-huggingface — and why fine-tuning a small encoder (@sec-fine-tuning) is still often the right tool for large-scale annotation.
+
+**Decoder-only** models — the GPT family, Claude, Llama, and essentially every modern chat model — keep the causal mask and the next-token objective, exactly as we computed. Why did this family win the scaling race? Because generation subsumes everything. A classification task, a translation task, a summarization task can all be *written as text to continue* — "Label this speech's stance: " — so one simple objective, trained on essentially all available text, covers them all. One stack, one stream, one objective. The chat behavior you see in a product is added afterward by fine-tuning on dialogue; the architecture underneath is the decoder you now understand.
+
+::: {.callout-warning}
+Attention weights look like an explanation — "the model attended to *denied*, so that is why it labeled the speech a denial." Treat that as a reading, not a proof. [Jain and Wallace (2019)](https://aclanthology.org/N19-1357/) showed that attention weights often disagree with other importance measures, and that very different attention patterns can produce identical predictions; [Wiegreffe and Pinter (2019)](https://aclanthology.org/D19-1002/) pushed back on how far that critique extends. The honest summary: attention maps are evidence worth looking at and not sufficient to hang a causal claim on. The interpretability part of this book exists because better tools do.
+:::
+
+## The whole objective is next-token prediction
+
+Here is the demystifying fact this chapter has been building toward: *everything the base model learns, it learns from predicting the next token.* That is the entire training objective. There is no grammar module, no fact database, no reasoning engine bolted on the side. There is a stack of attention and MLP layers, a residual stream, and one repeated question over trillions of tokens: given the text so far, what comes next? Syntax, world knowledge, translation, the ability to imitate a careful qualitative coder — all of it exists in the weights only because it helped answer that question a little better.
+
+Sit with how strange that is, and then notice how much it explains. It explains why models produce fluent, confident text that is sometimes wrong: the objective rewards *plausible continuation*, and plausibility usually tracks truth but is not truth. It explains fabricated citations: a plausible-looking reference is a good next-token sequence whether or not the paper exists. It explains why prompt wording moves results — you are changing the text being continued, so you are changing the distribution (@sec-prompting builds on exactly this). And it explains why every LLM-assisted measurement in your research needs validation against human judgment: the model hands you the most *likely* label, and likely is an empirical claim about training text, not about your construct.
+
+You now know what the object is: tokens in, notes accumulated across a stack of layers, a probability distribution out. The rest of this book is about what a social scientist can do with — and to — that object.
+
+## In research
+
+The most direct payoff of this architecture is measurement. Contextual representations solve the polysemy problem that has dogged dictionary methods since content analysis began: a fine-tuned encoder codes "the minister denied corruption" and "the court proved corruption" differently *because* the vector at *corruption* differs across the two sentences — the by-hand computation above is the mechanism doing that work. This is why transformer-based classifiers became the standard for stance detection in parliamentary speech, position measurement in party manifestos, and frame analysis in news coverage; @sec-batch turns this into a pipeline you can run over a hundred thousand documents.
+
+There is also a longer intellectual thread here that social scientists should claim. [Kozlowski, Taddy, and Evans (2019)](https://journals.sagepub.com/doi/full/10.1177/0003122419877135) measured the cultural meanings of class by treating meanings as directions in static embedding space — the "geometry of culture." Transformer representations extend that program: the geometry is still there, but now it is *context-dependent*, which is much closer to how meaning actually behaves in interviews, open-ended survey responses, and political speech. A researcher who understands the residual stream picture can ask sharper versions of the same questions — not just "where does *corruption* sit in semantic space?" but "how does its position move when a co-partisan versus an opponent utters it?"
+
+Finally, understanding the objective changes how you defend a method section. When a reviewer asks why you trust an LLM's annotations of your interview transcripts, "it predicts the next token, so its labels reflect plausible continuations of my instructions — which is why I validated against double-coded human data and report agreement" is an answer that survives scrutiny. When your model confidently invents a survey item that was never fielded, you will not be surprised, because you know there is no lookup happening — only continuation. The architecture is not trivia; it is the reason the validation practices in the rest of this book are non-negotiable.
+
+<!-- DRAFT NOTE (Emre): a concrete example from your own narratives work — where a contextual model caught something a dictionary missed, or where an LLM annotation failed validation — would land well here. -->
+
+## Further reading
+
+- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — Vaswani et al. (2017), the original transformer paper. Denser than this chapter, but after the by-hand exercise you can read Section 3.2 and recognize every symbol.
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/) — Jay Alammar's visual walkthrough; the best next step if you want the full architecture drawn out piece by piece.
+- [What exactly are keys, queries, and values in attention mechanisms?](https://stats.stackexchange.com/questions/421935/what-exactly-are-keys-queries-and-values-in-attention-mechanisms) — the Stack Exchange discussion I assign alongside the by-hand exercise; several genuinely different intuitions for Q/K/V.
+- [A Primer on the Inner Workings of Transformer-based Language Models](https://arxiv.org/abs/2405.00208) — Ferrando et al. (2024); the bridge from this chapter to the interpretability part of the book.
+- [Attention is not Explanation](https://aclanthology.org/N19-1357/) — Jain and Wallace (2019), and the reply, [Attention is not not Explanation](https://aclanthology.org/D19-1002/) — Wiegreffe and Pinter (2019). Read as a pair; together they are a compact lesson in construct validity applied to models.
+- [The Geometry of Culture](https://journals.sagepub.com/doi/full/10.1177/0003122419877135) — Kozlowski, Taddy, and Evans (2019), *American Sociological Review*. Meaning as direction in vector space, done by sociologists before LLMs made it fashionable.

@@ -1,0 +1,195 @@
+# Embeddings: Concepts as Vectors {#sec-embeddings}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have 3,000 open-ended survey responses to the classic question: *"What is the most important problem facing the country?"* One respondent writes "Immigration is out of control." Another writes "Too many people crossing the border." These two answers share no content words. A keyword search treats them as unrelated. A dictionary method scores them on different entries. Any human coder sees immediately that they belong together — but you cannot hire a human coder for 3,000 responses every time, and even if you could, two coders would disagree at the margins.
+
+Embeddings are the fix. An embedding turns a piece of text into a list of numbers — a vector — such that texts with similar meanings get vectors pointing in similar directions. Once meaning is geometry, you can compute with it: measure how close two survey responses are, find duplicates, cluster answers into themes, place party manifestos on a scale. This chapter builds that idea from the ground up: first by hand with numbers small enough to check on paper, then in code, then in the research designs it has already made possible. It is also the conceptual floor for most of what follows in this book — retrieval-augmented generation (@sec-rag) rests on it, and the interpretability chapters will ask whether the model's *internal* concepts are vectors too.
+
+<!-- DRAFT NOTE (Emre): personal opening anecdote could go here — hand-coding open-ends or a coding-disagreement story from a project, whichever you actually have. -->
+
+## From counting words to measuring meaning
+
+The oldest way to represent text numerically is to count words. Build a vocabulary, and represent each document as a vector of word counts — the *bag of words*. It is transparent and it still works for many tasks. But it has a blind spot you cannot patch: it treats words as unrelated symbols. In a bag-of-words space, "immigration" and "border" are exactly as far apart as "immigration" and "cheese." Every word is its own dimension, orthogonal to every other.
+
+The way out comes from a hypothesis in linguistics: words that occur in similar contexts tend to have similar meanings — J.R. Firth's 1957 slogan, "you shall know a word by the company it keeps." "Immigration" and "border" show up around the same neighbors: *policy, crossing, illegal, control, security*. "Cheese" does not. If you train a model to predict words from their contexts — the word2vec family of models is the classic example ([Mikolov et al. 2013](https://arxiv.org/abs/1301.3781)) — the model is forced to give similar words similar vectors, because similar words need to make similar predictions. Nobody writes the vectors down; they are learned, the same way the weights in @sec-neural-networks were learned, by gradient descent on a prediction task.
+
+The result: each word becomes a point in a space with a few hundred dimensions. The dimensions have no labels. No single coordinate means "economy" or "gender." Meaning lives in the *directions* — where a word points relative to other words. That sounds abstract, so let us make it concrete with numbers small enough to check by hand.
+
+## Cosine similarity by hand
+
+Real embeddings have hundreds of dimensions. For arithmetic practice, three will do. Suppose — purely for exposition — that our space has three interpretable dimensions: *economy*, *security*, *welfare*. (Real learned dimensions are not interpretable like this. We give them names here so the arithmetic means something; the math is identical either way.) Here are three words from our survey corpus:
+
+| word | economy | security | welfare |
+|---|---|---|---|
+| **taxes** | 0.9 | 0.1 | 0.3 |
+| **budget** | 0.8 | 0.2 | 0.4 |
+| **border** | 0.1 | 0.9 | 0.1 |
+
+How similar are "taxes" and "budget"? The standard measure is **cosine similarity** — the cosine of the angle between the two vectors:
+
+$$
+\cos(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a} \cdot \mathbf{b}}{\lVert \mathbf{a} \rVert \, \lVert \mathbf{b} \rVert}
+$$
+
+It runs from 1 (same direction) through 0 (perpendicular — unrelated) to −1 (opposite). Work it out for "taxes" and "budget."
+
+**Step 1 — the dot product.** Multiply coordinate by coordinate and add:
+
+$$
+0.9 \times 0.8 + 0.1 \times 0.2 + 0.3 \times 0.4 = 0.72 + 0.02 + 0.12 = 0.86
+$$
+
+**Step 2 — the lengths.** Each vector's length is the square root of the sum of its squared coordinates:
+
+$$
+\lVert \text{taxes} \rVert = \sqrt{0.81 + 0.01 + 0.09} = \sqrt{0.91} \approx 0.954
+$$
+$$
+\lVert \text{budget} \rVert = \sqrt{0.64 + 0.04 + 0.16} = \sqrt{0.84} \approx 0.917
+$$
+
+**Step 3 — divide.**
+
+$$
+\cos(\text{taxes}, \text{budget}) = \frac{0.86}{0.954 \times 0.917} \approx \frac{0.86}{0.875} \approx 0.98
+$$
+
+Very similar — both point almost entirely along the economy dimension. Run the same three steps for the other pairs and you get:
+
+| pair | cosine |
+|---|---|
+| taxes · budget | 0.98 |
+| taxes · border | 0.24 |
+| budget · border | 0.36 |
+
+The geometry matches the intuition: two fiscal words nearly parallel, both far from the security word. Do the "taxes · border" computation yourself before moving on — it is three multiplications, two square roots, and one division, and after you have done it once the whole apparatus stops being mysterious.
+
+One more by-hand observation, because it explains a choice that otherwise looks arbitrary: why the *angle* and not the *distance*? Take the "taxes" vector and multiply every coordinate by 3, giving $[2.7, 0.3, 0.9]$ — think of it as a response that hammers on taxes three times over. Its Euclidean distance from the original "taxes" is about 1.91 — large, farther than "taxes" is from "budget" (0.17). But its cosine with "taxes" is exactly 1.0: same direction. In embedding spaces, a vector's length tends to pick up incidental things — word frequency, document length, emphasis. Its direction carries the meaning. Cosine looks only at direction, which is why it is the default.
+
+::: {.callout-tip}
+In practice you rarely compute norms yourself. Every embedding library can return vectors already scaled to length 1 (*normalized*), and for normalized vectors cosine similarity is just the dot product — step 1 with no steps 2 and 3. That is also why you will see `normalize_embeddings=True` in the code below.
+:::
+
+## Arithmetic with meaning: king − man + woman
+
+If words are vectors, you can do more than compare them — you can add and subtract them. The most famous demonstration: take the vector for *king*, subtract *man*, add *woman*, and the nearest word to the result is *queen*. Here is a toy space where you can verify it on paper, with two exposition-only dimensions:
+
+| word | royalty | femininity |
+|---|---|---|
+| **king** | 0.9 | 0.1 |
+| **queen** | 0.9 | 0.9 |
+| **man** | 0.1 | 0.1 |
+| **woman** | 0.1 | 0.9 |
+
+$$
+\text{king} - \text{man} + \text{woman} = [0.9 - 0.1 + 0.1,\; 0.1 - 0.1 + 0.9] = [0.9,\; 0.9] = \text{queen}
+$$
+
+Subtracting *man* removes maleness while keeping royalty; adding *woman* puts femininity back. The difference vector *woman − man* is a **direction that means gender**, and you can add it to any word. It works exactly here because I built the table so it would work. The genuinely surprising finding, due to [Mikolov, Yih and Zweig (2013)](https://aclanthology.org/N13-1090/), was that vectors learned from raw text — with no one designing any dimensions — support this arithmetic *approximately*. Paris − France + Türkiye lands near Ankara. Walked − walking + swimming lands near swam.
+
+::: {.callout-warning}
+The analogy demo is a party trick, and you should know its fine print before you repeat it. It is approximate, it works for some relations and fails for others, and the standard evaluation quietly excludes the input words from the candidate answers — without that exclusion, the nearest neighbor of king − man + woman is often just *king* itself. Do not build a measurement strategy on analogy completion. Build it on the idea underneath: **differences between vectors encode relations**, and a well-chosen difference — *rich − poor*, *man − woman* — is an axis you can measure other words against. That idea, unlike the party trick, has survived scrutiny and become a method. It reappears below.
+:::
+
+## Are concepts really vectors?
+
+So far "words as vectors" is an engineering trick that happens to work. There is a stronger claim available, and it matters for how you interpret everything this book does later: maybe concepts — in models, and possibly in us — just *are* vectors.
+
+The old objection comes from [Fodor and Pylyshyn (1988)](https://www.sciencedirect.com/science/article/abs/pii/0010027788900315), who argued that thought is *systematic*: nobody understands "the dog chased the cat" without also understanding "the cat chased the dog." Thoughts must be built from recombinable parts — symbols with rules for combining them — and a network that merely tunes continuous weights has no such parts, so it can imitate a concept but not possess one. That argument held the field for decades, and it gets its full treatment in @sec-why-interpretability, where it becomes an empirical question you can actually test on a model. Here we only need the reply.
+
+The reply, from [Piantadosi and colleagues (2024)](https://www.cell.com/trends/cognitive-sciences/fulltext/S1364-6613(24)00171-2), is titled "Why concepts are (probably) vectors," and the *probably* is doing honest work. Their argument: vectors can be combined and recombined — the compositional structure Fodor demanded — while offering something symbols never had: **similarity, distance, and degree**. A symbol system can tell you that "taxes" and "budget" are different symbols; it has no native way to say they are *close*. A vector space says it with a number: 0.98. For a social scientist this is not a philosophical footnote. Our concepts — ideology, status, threat, trust — are graded, fuzzy at the edges, and similar-to-each-other in measurable degrees. A representational format with built-in geometry fits them better than discrete symbols ever did. Whether the concepts inside a *language model* are literally directions in its activation space is a further, testable claim — the interpretability chapters, especially @sec-sparse-autoencoders, take it up with instruments rather than arguments.
+
+<!-- DRAFT NOTE (Emre): this Fodor/Piantadosi beat is Phase 2 of your SICSS-Istanbul talk — your framing there ("the argument that became an experiment") and any audience reaction is worth folding in here in your own words. -->
+
+## From words to sentences
+
+One vector per word has a built-in flaw that matters for political text: many words mean several things. "Party" is an organization in a manifesto and a celebration in a birthday invitation; a static word vector is stuck averaging the two senses. The transformer architecture (@sec-transformers) solves this by computing a *contextual* embedding — the vector for "party" in a given sentence depends on the words around it. Same word, different sentence, different vector.
+
+For the survey problem we opened with, we need one more step: a single vector for an entire response, not one per word. Averaging word vectors works surprisingly badly; averaging washes out exactly the structure you care about. The practical solution is a transformer fine-tuned so that whole sentences with similar meanings land near each other — the Sentence-BERT line of models ([Reimers and Gurevych 2019](https://arxiv.org/abs/1908.10084)), packaged in the `sentence-transformers` library. That is what we will use.
+
+## In code
+
+The following runs in a free Colab notebook. The model, `all-MiniLM-L6-v2`, is small (about 90 MB, downloaded on first use), fast on a CPU, and good enough for most research uses; it maps any text to a 384-dimensional vector.
+
+```{python}
+# In Colab: %pip install sentence-transformers
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+responses = [
+    "Too many people crossing the border illegally.",          # R1
+    "Immigration is out of control.",                          # R2
+    "Rent keeps going up faster than my paycheck.",            # R3
+    "Housing has become unaffordable for ordinary families.",  # R4
+    "Politicians only care about themselves.",                 # R5
+]
+
+embeddings = model.encode(responses, normalize_embeddings=True)
+print(embeddings.shape)   # (5, 384): five responses, 384 dimensions each
+
+similarities = model.similarity(embeddings, embeddings)
+print(similarities.round(decimals=2))  # similarity() returns a torch tensor
+```
+
+You get a 5 × 5 matrix — every response compared with every other, the same cosine we computed by hand, just in 384 dimensions instead of 3. The pattern to expect: R1–R2 (both immigration) and R3–R4 (both housing) score high, roughly in the 0.5–0.7 range; cross-topic pairs score low, roughly 0.0–0.2. Note what the model did: R1 and R2 share not a single content word, and neither do R3 and R4 — the similarity is coming from meaning, not vocabulary overlap.
+
+<!-- DRAFT NOTE (Emre): paste the actual similarity matrix from the companion notebook here once it exists — the ranges above are from memory of running this model, not from this exact snippet. -->
+
+With a real corpus the immediate payoffs are deduplication and clustering. Finding near-duplicate responses is one call:
+
+```{python}
+from sentence_transformers import util
+
+# All pairs above a similarity threshold, most similar first
+pairs = util.paraphrase_mining(model, responses)
+for score, i, j in pairs[:3]:
+    print(f"{score:.2f} | {responses[i]} <-> {responses[j]}")
+```
+
+For grouping thousands of open-ends into themes, `util.community_detection(embeddings, threshold=0.6)` gives you fast, serviceable clusters, and anything from scikit-learn (k-means, agglomerative clustering) accepts the embedding matrix directly. Working in Turkish, or any mix of languages? Swap the model for a multilingual one such as `paraphrase-multilingual-MiniLM-L12-v2` — same code, and responses in different languages land in the same space.
+
+You can also buy embeddings through an API instead of computing them locally. The trade-off is the usual one from @sec-apis: no hardware to manage and often higher quality, but per-token cost and your data leaving your machine (a real constraint with interview transcripts under IRB protocols). With the OpenAI client:
+
+```{python}
+from openai import OpenAI
+
+client = OpenAI()  # reads OPENAI_API_KEY from the environment
+
+resp = client.embeddings.create(
+    model="text-embedding-3-small",
+    input=responses,
+)
+vectors = [item.embedding for item in resp.data]  # 1536 dimensions each
+```
+
+Provider notes, as of this writing: Anthropic does not offer an embeddings endpoint — its documentation points to Voyage AI for embeddings — and the open-model path for embeddings is exactly the local `sentence-transformers` route above (or any embedding model on the Hugging Face Hub; see @sec-huggingface). For embedding a whole corpus rather than five sentences, the batching and checkpointing habits from @sec-batch apply unchanged.
+
+::: {.callout-tip}
+Do you need to train your own embeddings on your own corpus? Usually not. [Rodriguez and Spirling (2022)](https://www.journals.uchicago.edu/doi/10.1086/715162) tested this systematically for political science applications and found that popular pretrained embeddings perform at or near the level of locally trained models — and close to human coders — for most applied tasks. Train your own only when your corpus uses language in a genuinely nonstandard way, and validate before you trust it either way.
+:::
+
+## In research
+
+The most influential social-scientific use of embeddings takes the analogy insight — differences between vectors are meaningful directions — and turns it into a measurement instrument. [Kozlowski, Taddy and Evans (2019)](https://journals.sagepub.com/doi/10.1177/0003122419877135) call it "the geometry of culture": subtract *poor* from *rich* (and average several such pairs) and you have an affluence axis; build similar axes for gender, education, status, and morality; then project any word onto them and read off its cultural coordinates. Training embeddings on a century of Google Books, they track how the meanings of class shifted in American culture — which markers of class moved and which stayed put across a hundred years. The same logic drives [Garg and colleagues (2018)](https://www.pnas.org/doi/10.1073/pnas.1720347115), who use decade-by-decade embeddings as an instrument for measuring gender and ethnic stereotypes across the twentieth century, validating the embedding-based measures against census records. Read those two papers together and the lesson is sharp: the "bias" in embeddings is a hazard if you deploy them in a hiring system, and a *microscope* if your research question is what a society's texts associate with *woman* or *immigrant*. The instrument measures the corpus. Whether that is a bug or the finding depends on your question.
+
+<!-- DRAFT NOTE (Emre): Kozlowski et al. is the paper you close the SICSS talk with ("the method you learned tonight is theirs, on a bigger model") — a sentence on why this paper matters to you personally would land well here. -->
+
+The second tradition is scaling political texts. [Rheault and Cochrane (2020)](https://www.cambridge.org/core/journals/political-analysis/article/abs/word-embeddings-for-the-analysis-of-ideological-placement-in-parliamentary-corpora/017F0CEA9B3DB6E1B94AC36A509A8A7B) train embeddings on parliamentary corpora from Britain, Canada, and the United States with party indicators included as tokens, so each party in each period gets its own vector — and the geometry of those *party embeddings* recovers left–right placement, validated against expert surveys, manifesto codings, and roll-call measures. No hand-built dictionary of ideological words, no labeled training set: the scale falls out of the space.
+
+The third tradition is the unglamorous workhorse layer, and you will use it more often than either of the above. Deduplicating open-ends before analysis (and catching straight-lining or copy-paste survey bots while you are at it). Clustering interview passages so you read one exemplar per theme instead of forty near-repeats. Retrieving every paragraph in a news corpus that discusses a policy, regardless of wording — which is exactly the retrieval step inside RAG systems (@sec-rag). Matching texts across languages in comparative work. None of this produces a headline finding on its own; all of it changes what corpus sizes one researcher can handle honestly.
+
+One habit to carry out of this chapter: an embedding similarity is **a reading, not a proof**. A cosine of 0.7 between two survey responses is a model's judgment that they are alike — a useful judgment, learned from text that is not your text, with failure modes you have not seen yet. Before any embedding-based measure goes in a paper, validate it the way you would validate a coder: sample pairs across the similarity range, read them yourself, and check that the numbers track the distinction *you* mean. Rodriguez and Spirling's checklist is the model here. The instrument being fashionable does not exempt it from construct validity.
+
+## Further reading
+
+- [Piantadosi et al. (2024), "Why concepts are (probably) vectors," *Trends in Cognitive Sciences*](https://www.cell.com/trends/cognitive-sciences/fulltext/S1364-6613(24)00171-2) — the conceptual argument of this chapter, made carefully. The *probably* is a lesson in itself.
+- [Kozlowski, Taddy & Evans (2019), "The Geometry of Culture," *American Sociological Review*](https://journals.sagepub.com/doi/10.1177/0003122419877135) — the paper to read first if you read only one.
+- [Garg et al. (2018), "Word embeddings quantify 100 years of gender and ethnic stereotypes," *PNAS*](https://www.pnas.org/doi/10.1073/pnas.1720347115) — embeddings as a historical instrument.
+- [Rheault & Cochrane (2020), "Word Embeddings for the Analysis of Ideological Placement in Parliamentary Corpora," *Political Analysis*](https://www.cambridge.org/core/journals/political-analysis/article/abs/word-embeddings-for-the-analysis-of-ideological-placement-in-parliamentary-corpora/017F0CEA9B3DB6E1B94AC36A509A8A7B) — semantic scaling done right, with validation.
+- [Rodriguez & Spirling (2022), "Word Embeddings: What Works, What Doesn't, and How to Tell the Difference for Applied Research," *Journal of Politics*](https://www.journals.uchicago.edu/doi/10.1086/715162) — the practical guide; read before your first embedding-based measure.
+- [Mikolov et al. (2013), "Efficient Estimation of Word Representations in Vector Space"](https://arxiv.org/abs/1301.3781) and [Reimers & Gurevych (2019), "Sentence-BERT"](https://arxiv.org/abs/1908.10084) — the two engineering papers behind everything in this chapter.
+- Gentler on-ramps: the [StatQuest video on word embeddings](https://www.youtube.com/watch?v=viZrOnJclY0) (11 minutes) and [IBM's overview of word embeddings](https://www.ibm.com/think/topics/word-embeddings), both from the pre-lab reading of the original AIDE bootcamp version of this session.

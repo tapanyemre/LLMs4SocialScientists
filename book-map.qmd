@@ -1,0 +1,670 @@
+# Book Map {.unnumbered}
+
+Every chapter in this book refers to others — foundations feed methods, methods feed interpretation. This map draws that structure: **each node is a chapter, each arrow is a cross-reference.** Scroll or use the buttons to zoom, drag the canvas to pan, drag nodes to rearrange. **Hover a chapter to spotlight its neighborhood**; click to open it. Faded, dashed nodes are `planned` chapters that exist only as roadmap stubs.
+
+*(The map is regenerated from the manuscript itself — `python3 scripts/build-book-map.py` — so it stays honest as the book grows.)*
+
+```{=html}
+<div id="book-map-wrap" style="position:relative; margin: 1.5rem 0;">
+  <svg id="book-map" style="width:100%; height:720px; display:block; border:1px solid rgba(128,128,128,0.35); border-radius:10px; cursor:grab;"></svg>
+  <div id="book-map-controls" style="position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:4px;">
+    <button class="bm-btn" id="bm-zoom-in" aria-label="Zoom in">+</button>
+    <button class="bm-btn" id="bm-zoom-out" aria-label="Zoom out">−</button>
+    <button class="bm-btn" id="bm-zoom-fit" aria-label="Fit to view" style="font-size:0.7rem;">fit</button>
+  </div>
+  <div id="book-map-legend" style="display:flex; flex-wrap:wrap; gap:0.4rem 1.1rem; margin-top:0.7rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem;"></div>
+  <div id="book-map-tip" style="position:absolute; pointer-events:none; opacity:0; background:#162444; color:#f3efe4; padding:0.5rem 0.7rem; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; max-width:240px; line-height:1.5; z-index:10;"></div>
+</div>
+<style>
+.bm-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid rgba(128,128,128,0.45);
+  background: var(--bs-body-bg, #fff); color: var(--bs-body-color, #222);
+  font-family: 'IBM Plex Mono', monospace; font-size: 1rem; font-weight: 600;
+  cursor: pointer; line-height: 1;
+}
+.bm-btn:hover { border-color: #1d4ed8; color: #1d4ed8; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+// BOOK-MAP-DATA-START
+window.BOOK_MAP = {
+ "nodes": [
+  {
+   "id": "sec-python-refresher",
+   "title": "Python for Text Analysis",
+   "part": "Python Refresher",
+   "status": "drafted",
+   "href": "python-refresher/01-python-for-text-analysis.html"
+  },
+  {
+   "id": "sec-neural-networks",
+   "title": "Neural Networks by Hand",
+   "part": "Foundations",
+   "status": "drafted",
+   "href": "foundations/01-neural-networks.html"
+  },
+  {
+   "id": "sec-embeddings",
+   "title": "Embeddings: Concepts as Vectors",
+   "part": "Foundations",
+   "status": "drafted",
+   "href": "foundations/02-embeddings.html"
+  },
+  {
+   "id": "sec-transformers",
+   "title": "Transformers and Attention by Hand",
+   "part": "Foundations",
+   "status": "drafted",
+   "href": "foundations/03-transformers-and-attention.html"
+  },
+  {
+   "id": "sec-huggingface",
+   "title": "Open Models with Hugging Face",
+   "part": "LLMs in Action",
+   "status": "drafted",
+   "href": "llms-in-action/01-huggingface.html"
+  },
+  {
+   "id": "sec-apis",
+   "title": "Working with APIs",
+   "part": "LLMs in Action",
+   "status": "drafted",
+   "href": "llms-in-action/02-working-with-apis.html"
+  },
+  {
+   "id": "sec-batch",
+   "title": "Batch Processing at Research Scale",
+   "part": "LLMs in Action",
+   "status": "drafted",
+   "href": "llms-in-action/03-batch-processing.html"
+  },
+  {
+   "id": "sec-prompting",
+   "title": "Prompting, Informed by the Literature",
+   "part": "Steering LLMs",
+   "status": "drafted",
+   "href": "steering/01-prompting.html"
+  },
+  {
+   "id": "sec-rag",
+   "title": "Retrieval-Augmented Generation",
+   "part": "Steering LLMs",
+   "status": "drafted",
+   "href": "steering/02-rag.html"
+  },
+  {
+   "id": "sec-graphrag",
+   "title": "GraphRAG: Adding Structure",
+   "part": "Steering LLMs",
+   "status": "drafted",
+   "href": "steering/03-graphrag.html"
+  },
+  {
+   "id": "sec-research-tools",
+   "title": "Building Research Tools",
+   "part": "Steering LLMs",
+   "status": "drafted",
+   "href": "steering/04-research-tools.html"
+  },
+  {
+   "id": "sec-why-interpretability",
+   "title": "Why Interpretability? An Anthropology of Machines",
+   "part": "Reading LLMs: Mechanistic Interpretability",
+   "status": "drafted",
+   "href": "interpretability/01-why-interpretability.html"
+  },
+  {
+   "id": "sec-logit-lens",
+   "title": "The Logit Lens",
+   "part": "Reading LLMs: Mechanistic Interpretability",
+   "status": "drafted",
+   "href": "interpretability/02-logit-lens.html"
+  },
+  {
+   "id": "sec-sparse-autoencoders",
+   "title": "Sparse Autoencoders and Features",
+   "part": "Reading LLMs: Mechanistic Interpretability",
+   "status": "drafted",
+   "href": "interpretability/03-sparse-autoencoders.html"
+  },
+  {
+   "id": "sec-activation-patching",
+   "title": "Activation Patching",
+   "part": "Reading LLMs: Mechanistic Interpretability",
+   "status": "planned",
+   "href": "interpretability/04-activation-patching.html"
+  },
+  {
+   "id": "sec-circuits",
+   "title": "Circuits",
+   "part": "Reading LLMs: Mechanistic Interpretability",
+   "status": "planned",
+   "href": "interpretability/05-circuits.html"
+  },
+  {
+   "id": "sec-fine-tuning",
+   "title": "Fine-Tuning for Research",
+   "part": "Changing LLMs: Model Development",
+   "status": "planned",
+   "href": "model-development/01-fine-tuning.html"
+  }
+ ],
+ "links": [
+  {
+   "source": "sec-activation-patching",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-apis",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-apis",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-apis",
+   "target": "sec-prompting"
+  },
+  {
+   "source": "sec-apis",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-batch",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-circuits",
+   "target": "sec-sparse-autoencoders"
+  },
+  {
+   "source": "sec-circuits",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-neural-networks"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-rag"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-sparse-autoencoders"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-embeddings",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-fine-tuning",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-graphrag",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-graphrag",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-graphrag",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-graphrag",
+   "target": "sec-rag"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-activation-patching"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-prompting"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-rag"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-huggingface",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-activation-patching"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-circuits"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-neural-networks"
+  },
+  {
+   "source": "sec-logit-lens",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-neural-networks",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-neural-networks",
+   "target": "sec-fine-tuning"
+  },
+  {
+   "source": "sec-neural-networks",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-neural-networks",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-neural-networks",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-fine-tuning"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-rag"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-prompting",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-python-refresher",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-python-refresher",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-python-refresher",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-python-refresher",
+   "target": "sec-neural-networks"
+  },
+  {
+   "source": "sec-python-refresher",
+   "target": "sec-prompting"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-graphrag"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-prompting"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-research-tools"
+  },
+  {
+   "source": "sec-rag",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-research-tools",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-research-tools",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-research-tools",
+   "target": "sec-rag"
+  },
+  {
+   "source": "sec-sparse-autoencoders",
+   "target": "sec-activation-patching"
+  },
+  {
+   "source": "sec-sparse-autoencoders",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-sparse-autoencoders",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-sparse-autoencoders",
+   "target": "sec-logit-lens"
+  },
+  {
+   "source": "sec-sparse-autoencoders",
+   "target": "sec-transformers"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-apis"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-fine-tuning"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-huggingface"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-neural-networks"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-prompting"
+  },
+  {
+   "source": "sec-transformers",
+   "target": "sec-why-interpretability"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-activation-patching"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-batch"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-circuits"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-embeddings"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-logit-lens"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-neural-networks"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-sparse-autoencoders"
+  },
+  {
+   "source": "sec-why-interpretability",
+   "target": "sec-transformers"
+  }
+ ]
+};
+// BOOK-MAP-DATA-END
+
+(function () {
+  const data = window.BOOK_MAP;
+  if (!data.nodes.length || typeof d3 === "undefined") return;
+
+  const PART_COLORS = {
+    "Python Refresher": "#c98a2d",
+    "Foundations": "#1d4ed8",
+    "LLMs in Action": "#16a34a",
+    "Steering LLMs": "#b4552d",
+    "Reading LLMs: Mechanistic Interpretability": "#7c3aed",
+    "Changing LLMs: Model Development": "#64748b"
+  };
+  const color = p => PART_COLORS[p] || "#64748b";
+
+  const svg = d3.select("#book-map");
+  const W = svg.node().clientWidth || 900, H = 720;
+  svg.attr("viewBox", [0, 0, W, H]);
+
+  // in-degree drives node size
+  const inDeg = {};
+  data.links.forEach(l => { inDeg[l.target] = (inDeg[l.target] || 0) + 1; });
+  const r = d => 10 + 2.6 * Math.sqrt(inDeg[d.id] || 0);
+
+  svg.append("defs").append("marker")
+    .attr("id", "bm-arrow").attr("viewBox", "0 -4 8 8")
+    .attr("refX", 8).attr("markerWidth", 7).attr("markerHeight", 7)
+    .attr("orient", "auto")
+    .append("path").attr("d", "M0,-4L8,0L0,4").attr("fill", "#9aa3b5");
+
+  // everything lives in one group so zoom/pan is a single transform
+  const view = svg.append("g");
+
+  const sim = d3.forceSimulation(data.nodes)
+    .force("link", d3.forceLink(data.links).id(d => d.id).distance(160).strength(0.3))
+    .force("charge", d3.forceManyBody().strength(-750))
+    .force("center", d3.forceCenter(W / 2, H / 2))
+    .force("collide", d3.forceCollide().radius(d => r(d) + 38));
+
+  const link = view.append("g").selectAll("line")
+    .data(data.links).join("line")
+    .attr("stroke", "#9aa3b5").attr("stroke-opacity", 0.4)
+    .attr("stroke-width", 1.2).attr("marker-end", "url(#bm-arrow)");
+
+  const node = view.append("g").selectAll("g")
+    .data(data.nodes).join("g")
+    .style("cursor", "pointer")
+    .call(d3.drag()
+      .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = d.fy = null; }));
+
+  node.append("circle")
+    .attr("r", d => r(d))
+    .attr("fill", d => color(d.part))
+    .attr("fill-opacity", d => d.status === "planned" ? 0.3 : 0.95)
+    .attr("stroke", d => color(d.part))
+    .attr("stroke-dasharray", d => d.status === "planned" ? "3,3" : null)
+    .attr("stroke-width", 1.5);
+
+  node.append("text")
+    .text(d => d.title.length > 28 ? d.title.slice(0, 26) + "…" : d.title)
+    .attr("text-anchor", "middle")
+    .attr("dy", d => r(d) + 15)
+    .style("font-family", "'IBM Plex Mono', monospace")
+    .style("font-size", "10.5px")
+    .style("fill", "currentColor")
+    .style("paint-order", "stroke")
+    .style("stroke", "var(--bs-body-bg, #fff)")
+    .style("stroke-width", "3px");
+
+  // ── neighborhood spotlight ──────────────────────────────────
+  const neighbors = {};
+  data.nodes.forEach(n => { neighbors[n.id] = new Set([n.id]); });
+  const endId = e => (typeof e === "object" ? e.id : e);
+
+  // styles applied directly (no d3 transitions): transition timers are
+  // throttled in background tabs and the spotlight must always work
+  function focus(d) {
+    const near = neighbors[d.id];
+    node.style("opacity", n => near.has(n.id) ? 1 : 0.12);
+    link
+      .attr("stroke-opacity", l =>
+        endId(l.source) === d.id || endId(l.target) === d.id ? 0.9 : 0.06)
+      .attr("stroke", l =>
+        endId(l.source) === d.id || endId(l.target) === d.id ? "#1d4ed8" : "#9aa3b5");
+  }
+  function unfocus() {
+    node.style("opacity", 1);
+    link.attr("stroke-opacity", 0.4).attr("stroke", "#9aa3b5");
+  }
+
+  const tip = d3.select("#book-map-tip");
+  node
+    .on("mouseenter", (e, d) => {
+      focus(d);
+      const cites = data.links.filter(l => endId(l.source) === d.id).length;
+      const cited = inDeg[d.id] || 0;
+      tip.style("opacity", 1).html(
+        `<strong>${d.title}</strong><br>${d.part}<br>status: ${d.status}<br>refers to ${cites} · referred by ${cited}`);
+    })
+    .on("mousemove", e => {
+      const [x, y] = d3.pointer(e, document.getElementById("book-map-wrap"));
+      tip.style("left", (x + 14) + "px").style("top", (y + 6) + "px");
+    })
+    .on("mouseleave", () => { unfocus(); tip.style("opacity", 0); })
+    .on("click", (e, d) => { window.location.href = d.href; });
+
+  function ticked() {
+    link
+      .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+      .attr("x2", d => {
+        const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        return d.target.x - dx / dist * (r(d.target) + 4);
+      })
+      .attr("y2", d => {
+        const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        return d.target.y - dy / dist * (r(d.target) + 4);
+      });
+    node.attr("transform", d => `translate(${d.x},${d.y})`);
+  }
+  sim.on("tick", ticked);
+
+  // Settle the layout synchronously so the map renders even where
+  // animation timers are throttled (background tabs, snapshots);
+  // the live simulation only takes over again while dragging.
+  sim.stop();
+  for (let i = 0; i < 300; i++) sim.tick();
+  // fill the neighbor sets once links are resolved to node objects
+  data.links.forEach(l => {
+    neighbors[endId(l.source)].add(endId(l.target));
+    neighbors[endId(l.target)].add(endId(l.source));
+  });
+  ticked();
+
+  // ── zoom, pan, fit ──────────────────────────────────────────
+  const zoom = d3.zoom()
+    .scaleExtent([0.3, 4])
+    .on("zoom", e => view.attr("transform", e.transform));
+  svg.call(zoom).on("dblclick.zoom", null);
+
+  function fit(animate) {
+    const xs = data.nodes.map(d => d.x), ys = data.nodes.map(d => d.y);
+    const pad = 60;
+    const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad;
+    const y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad + 18; // room for labels
+    const k = Math.min(3, 0.98 / Math.max((x1 - x0) / W, (y1 - y0) / H));
+    const t = d3.zoomIdentity
+      .translate(W / 2, H / 2).scale(k)
+      .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+    // instant on load (animation frames may be throttled); animated on click
+    if (animate) svg.transition().duration(250).call(zoom.transform, t);
+    else svg.call(zoom.transform, t);
+  }
+  fit(false);
+
+  document.getElementById("bm-zoom-in").onclick = () => svg.transition().duration(150).call(zoom.scaleBy, 1.35);
+  document.getElementById("bm-zoom-out").onclick = () => svg.transition().duration(150).call(zoom.scaleBy, 1 / 1.35);
+  document.getElementById("bm-zoom-fit").onclick = () => fit(true);
+
+  const legend = d3.select("#book-map-legend");
+  Object.entries(PART_COLORS).forEach(([part, c]) => {
+    if (!data.nodes.some(n => n.part === part)) return;
+    const item = legend.append("span").style("display", "inline-flex").style("align-items", "center").style("gap", "0.35rem");
+    item.append("span").style("width", "10px").style("height", "10px")
+      .style("border-radius", "50%").style("background", c).style("display", "inline-block");
+    item.append("span").text(part.replace(/:.*/, ""));
+  });
+})();
+</script>
+```
+
+## Reading the map
+
+A few things the layout makes visible that the table of contents hides: the **Foundations** chapters are the most-cited nodes — everything routes back through embeddings and transformers; the **interpretability part** forms its own cluster that leans on Foundations rather than on the applied chapters; and `planned` chapters (dashed) show where the network is still growing. If a chapter you need is a dashed node, say so in its comments — that is exactly the signal that reorders the roadmap.

@@ -1,0 +1,358 @@
+# Python for Text Analysis {#sec-python-refresher}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have collected 2,000 press releases from three political parties and you want to answer a simple question: which party talks about immigration most, and how has that changed over time? You could read all 2,000 documents. Researchers did exactly that for decades, and it works — for 2,000 documents, once, if you have a summer. But every method in this book, from word embeddings to LLM-assisted coding, starts the same way: your documents sit in a table, you load that table into Python, and you ask it questions. This chapter is about that first step.
+
+This is a refresher, not a course. If you took a programming class years ago and remember almost nothing, this chapter is for you. If you have never written a line of code, it will still work, but go slowly and run every example yourself. And if you use pandas every week, skim the self-check list at the end and move on to @sec-neural-networks. No prior data science experience is required for anything here. We will use small numbers — a corpus of nine press releases you can hold in your head — so that you can verify every result by hand before you trust the code.
+
+<!-- DRAFT NOTE (Emre): this is where your usual reassurance to returning coders goes — the "philosophers in my summer bootcamp had not coded since high school and were filtering dataframes in two hours" story, adapted for social scientists. -->
+
+## Getting set up: Google Colab
+
+You do not need to install anything. [Google Colab](https://colab.research.google.com/) gives you a Python environment in the browser, with pandas and matplotlib pre-installed. Open the site, sign in with a Google account, and create a new notebook.
+
+A notebook is a sequence of cells. You type code into a cell and press **Shift+Enter** to run it. The result appears below the cell. That is the whole interface.
+
+Three things to know before you start:
+
+- **Sessions are temporary.** Colab gives you a fresh machine each session. Your notebook is saved to Google Drive, but files you create during a session disappear when the runtime recycles. Re-run your cells from the top when you come back.
+- **No GPU needed.** Nothing in this chapter (or the next few) needs special hardware. The default runtime is fine.
+- **Order matters.** Cells share memory. If cell 5 uses a variable defined in cell 2, cell 2 must have been run first. When things behave strangely, use *Runtime → Restart and run all*.
+
+::: {.callout-tip}
+Make mistakes cheaply. A notebook cell costs nothing to re-run. Change a number, break the code on purpose, read the error, fix it. This loop — edit, run, read — is most of what programming is.
+:::
+
+## The Python you actually need
+
+You need less Python than you think. Five ideas cover almost everything in this book: variables, strings, lists, dictionaries, and functions (with loops and conditionals to glue them together).
+
+### Variables and strings
+
+A variable is a name for a piece of data. Here is one press release, stored as four variables:
+
+```{python}
+party = "Social Democrats"
+date = "2024-03-21"
+title = "Immigration reform must protect workers"
+n_words = 5
+
+print(f"{party} ({date}): {title} [{n_words} words]")
+```
+
+The `f"..."` syntax is an f-string: anything inside `{curly braces}` gets replaced by the variable's value. You will use this constantly for inspecting data.
+
+Where did `n_words = 5` come from? Count it yourself: *Immigration / reform / must / protect / workers*. Five. Now let Python do the same thing:
+
+```{python}
+words = title.split()
+print(words)
+print(len(words))
+```
+
+`.split()` breaks a string into a list of words wherever it finds whitespace. `len()` counts the items. You should get `['Immigration', 'reform', 'must', 'protect', 'workers']` and `5` — the same answer you got by hand. This is the habit to build early: compute something small by hand, then check that the code agrees. When the corpus grows to two million words, the code is all you have, and you want to have earned your trust in it.
+
+Two more string operations do a surprising amount of work in text analysis:
+
+```{python}
+print(title.lower())                     # "immigration reform must protect workers"
+print("immigration" in title.lower())    # True
+```
+
+`.lower()` standardizes case. The `in` operator checks whether one string appears inside another. Notice why we lowered the case first: `"immigration" in title` is `False`, because the title starts with a capital *I*. Computers match characters, not concepts. Half the bugs in text analysis are exactly this kind of mismatch.
+
+### Lists and dictionaries
+
+A list is an ordered collection. A dictionary maps names to values. Together they can represent a whole corpus: each document is a dictionary, and the corpus is a list of dictionaries.
+
+```{python}
+release = {
+    "party": "Social Democrats",
+    "date": "2024-03-21",
+    "title": "Immigration reform must protect workers",
+}
+
+print(release["party"])   # access a field by its key
+release["length"] = 5     # add a new field
+```
+
+Lists are indexed by position, starting at zero:
+
+```{python}
+parties = ["Social Democrats", "Conservatives", "Greens"]
+print(parties[0])    # first item
+print(parties[-1])   # last item
+print(len(parties))  # 3
+```
+
+### Loops, conditionals, and functions
+
+A loop repeats an action for every item in a collection. A conditional makes a decision. Here is a keyword classifier — three lines that contain the logic of a great deal of published content analysis:
+
+```{python}
+titles = [
+    "New plan to expand childcare access",
+    "Immigration reform must protect workers",
+    "Tougher rules on illegal immigration",
+]
+
+for t in titles:
+    if "immigration" in t.lower():
+        print(f"MATCH: {t}")
+    else:
+        print(f"       {t}")
+```
+
+Run it. Two titles match, one does not — which you can confirm by looking.
+
+A function wraps logic in a reusable name. Once your classification rule lives in a function, you can apply it to nine documents or nine million without rewriting it:
+
+```{python}
+def mentions_topic(text, keyword):
+    """Return True if keyword appears in text (case-insensitive)."""
+    return keyword.lower() in text.lower()
+
+print(mentions_topic("Border security comes first", "immigration"))  # False
+print(mentions_topic("Tougher rules on illegal immigration", "immigration"))  # True
+```
+
+That `False` on the first line matters. "Border security comes first" is plainly about immigration politics, but it does not contain the word. Keyword matching measures vocabulary, not meaning — a limitation we will return to, and the reason @sec-embeddings exists.
+
+## From documents to a dataset
+
+Real corpora do not arrive as loose variables. They arrive as tables: one row per document, one column per attribute. Before touching code, here is our full running corpus — nine press releases, on paper:
+
+| party | date | title |
+|---|---|---|
+| Social Democrats | 2024-01-15 | New plan to expand childcare access |
+| Social Democrats | 2024-02-03 | Fair wages for care workers now |
+| Social Democrats | 2024-03-21 | Immigration reform must protect workers |
+| Social Democrats | 2024-04-02 | Housing costs are out of control |
+| Conservatives | 2024-01-20 | Border security comes first |
+| Conservatives | 2024-02-14 | Tax relief for small businesses |
+| Conservatives | 2024-03-02 | Tougher rules on illegal immigration |
+| Greens | 2024-01-25 | Climate targets are not optional |
+| Greens | 2024-03-10 | A humane immigration policy is possible |
+
+Spend thirty seconds with this table. How many releases per party? Which titles mention immigration? Keep your answers; we will check the code against them.
+
+The Python library for tables is **pandas**, and its table object is the `DataFrame`. You can build one directly from a list of dictionaries:
+
+```{python}
+import pandas as pd
+
+releases = [
+    {"party": "Social Democrats", "date": "2024-01-15",
+     "title": "New plan to expand childcare access",
+     "text": "The party announced a plan to double public childcare places by 2028, funded by closing corporate tax loopholes."},
+    {"party": "Social Democrats", "date": "2024-02-03",
+     "title": "Fair wages for care workers now",
+     "text": "Care workers deserve a living wage. The party proposes a sector-wide minimum pay agreement."},
+    {"party": "Social Democrats", "date": "2024-03-21",
+     "title": "Immigration reform must protect workers",
+     "text": "Any immigration reform must include stronger labor protections so that newcomers are not exploited and wages are not undercut."},
+    {"party": "Social Democrats", "date": "2024-04-02",
+     "title": "Housing costs are out of control",
+     "text": "Rents have risen faster than wages for a decade. The party calls for a national rent cap and public housing investment."},
+    {"party": "Conservatives", "date": "2024-01-20",
+     "title": "Border security comes first",
+     "text": "Uncontrolled immigration puts pressure on housing and public services. The party demands stricter border checks."},
+    {"party": "Conservatives", "date": "2024-02-14",
+     "title": "Tax relief for small businesses",
+     "text": "Small businesses are the backbone of the economy. The party proposes cutting payroll taxes for firms under 50 employees."},
+    {"party": "Conservatives", "date": "2024-03-02",
+     "title": "Tougher rules on illegal immigration",
+     "text": "The party demands faster deportations and tougher penalties for illegal immigration and smuggling networks."},
+    {"party": "Greens", "date": "2024-01-25",
+     "title": "Climate targets are not optional",
+     "text": "The party warns that the new budget abandons the national climate targets agreed in 2021."},
+    {"party": "Greens", "date": "2024-03-10",
+     "title": "A humane immigration policy is possible",
+     "text": "The party presents an immigration plan built on legal pathways and faster asylum decisions, arguing that order and humanity are not opposites."},
+]
+
+df = pd.DataFrame(releases)
+df.head()
+```
+
+`df` is the conventional name for a DataFrame. `.head()` shows the first five rows.
+
+In practice you will rarely type a corpus in by hand. Your documents will live in a CSV file — the standard exchange format for tabular data, and what you get from most archives, scrapers, and replication packages. Save our corpus to CSV and load it back, so you have done the full round trip once:
+
+```{python}
+df.to_csv("press_releases.csv", index=False)
+
+df = pd.read_csv("press_releases.csv")
+```
+
+`pd.read_csv()` may be the most-used line of code in applied text analysis. It also reads directly from a URL: `pd.read_csv("https://.../corpus.csv")`.
+
+::: {.callout-tip}
+To get your own files into Colab, either run `from google.colab import files; files.upload()` and pick the file, or mount your Google Drive with `from google.colab import drive; drive.mount('/content/drive')` and read from the Drive path. Drive is better for anything you will use twice, because uploaded files vanish with the session.
+:::
+
+### First inspection
+
+Never analyze a dataset you have not inspected. Four commands tell you most of what you need:
+
+```{python}
+print(df.shape)          # (9, 4): 9 rows, 4 columns
+df.info()                # column names, types, non-null counts
+print(df.isnull().sum()) # missing values per column
+df.head(3)               # eyeball the actual content
+```
+
+With nine documents this feels like ceremony. With a real corpus it is where you discover that the scraper saved empty strings for March, that dates are stored as text, or that one party's releases are duplicated. Ten minutes of inspection saves days of analyzing artifacts.
+
+## Asking questions of the corpus
+
+### Counting
+
+How many releases per party? You already tallied this from the table: Social Democrats 4, Conservatives 3, Greens 2. Now the one-liner:
+
+```{python}
+df["party"].value_counts()
+```
+
+`df["party"]` selects one column. `.value_counts()` tallies its unique values. Check the output against your hand count — it should match exactly. `value_counts()` will likely be your most-used method after `read_csv`: it answers "what is in this column and how much of each?" for parties, speakers, topics, years, coder labels, anything categorical.
+
+### Filtering
+
+Which releases mention immigration in the title? By eye, three do. In pandas, you filter with a boolean condition inside square brackets:
+
+```{python}
+mask = df["title"].str.contains("immigration", case=False)
+print(mask)          # True/False for each of the 9 rows
+
+immig_titles = df[mask]
+print(len(immig_titles))       # 3
+immig_titles[["party", "title"]]
+```
+
+Read the first line as: for each row, does the title contain "immigration", ignoring case? The result is a column of `True`/`False` — a *mask*. `df[mask]` keeps only the `True` rows. The `.str` prefix means "apply this string operation to every row of the column."
+
+Now search the full text instead of the title:
+
+```{python}
+immig_text = df[df["text"].str.contains("immigration", case=False)]
+print(len(immig_text))         # 4
+```
+
+Four, not three. The Conservatives' border-security release mentions immigration in its body but not in its headline. Same corpus, same keyword, different measurement decision, different answer. Neither number is wrong; they operationalize "talks about immigration" differently. In a paper, this is a footnote you must write. Here, it is a result you can verify by rereading nine short texts — which is exactly why we started small.
+
+::: {.callout-warning}
+Two habits will save you from silent errors with `.str.contains()`. First, always pass `case=False` unless you have a reason not to — "Immigration", "immigration", and "IMMIGRATION" are different strings. Second, on real data pass `na=False` too: if any document is missing, `contains` returns a missing value instead of `False`, and your filter will crash or, worse, quietly misbehave. The defensive version is `df["text"].str.contains("immigration", case=False, na=False)`.
+:::
+
+Conditions combine with `&` (and) and `|` (or), each condition in parentheses:
+
+```{python}
+sd_immig = df[
+    (df["party"] == "Social Democrats")
+    & (df["text"].str.contains("immigration", case=False))
+]
+len(sd_immig)   # 1
+```
+
+### New columns and group comparisons
+
+Analysis usually means creating new variables from text. Two examples — a topic indicator and a word count:
+
+```{python}
+df["mentions_immigration"] = df["text"].str.contains("immigration", case=False)
+df["n_words"] = df["text"].str.split().str.len()
+
+df[["party", "title", "mentions_immigration", "n_words"]]
+```
+
+The second line is our by-hand word count from earlier, applied to every row at once: split each text into words, count the words.
+
+With the indicator in place, the research question — which party talks about immigration most? — is one `groupby` away:
+
+```{python}
+df.groupby("party")["mentions_immigration"].mean()
+```
+
+`groupby("party")` splits the rows into one group per party; `.mean()` of a True/False column is the share of `True`. You should see Conservatives at about 0.67 (2 of 3 releases), Greens at 0.50 (1 of 2), Social Democrats at 0.25 (1 of 4). Verify each fraction against the table above.
+
+Is this a finding? With nine documents, obviously not. With nine thousand, the same three lines of code produce a number worth putting in a paper — after you have asked the validation questions that nine documents let you answer by eye and nine thousand do not: Does the keyword capture the concept? What does it miss (our border-security release, dog whistles, synonyms)? What does it falsely catch? Take the measurement as a reading, not a proof, and validate it against a hand-coded sample. That advice is not original to this book; it is the central message of [Grimmer and Stewart (2013)](https://web.stanford.edu/~jgrimmer/tad2.pdf), and it applies with equal force when the classifier is an LLM instead of a keyword.
+
+## A first plot
+
+Numbers persuade coauthors; figures persuade everyone else. matplotlib makes basic charts directly from pandas objects:
+
+```{python}
+import matplotlib.pyplot as plt
+
+counts = df["party"].value_counts()
+
+plt.figure(figsize=(7, 4))
+plt.bar(counts.index, counts.values)
+plt.title("Press releases per party (toy corpus)")
+plt.ylabel("Number of releases")
+plt.show()
+```
+
+And the substantive result, immigration attention by party:
+
+```{python}
+share = df.groupby("party")["mentions_immigration"].mean().sort_values()
+
+plt.figure(figsize=(7, 4))
+plt.barh(share.index, share.values)
+plt.title("Share of releases mentioning immigration")
+plt.xlabel("Share")
+plt.xlim(0, 1)
+plt.show()
+```
+
+That is the entire descriptive pipeline: load, inspect, filter, measure, compare, plot. Everything else in this book upgrades the *measure* step.
+
+## Common errors you will hit
+
+Three errors account for most beginner frustration. Learn to recognize them and they stop being scary:
+
+- **`KeyError: 'Party'`** — you asked for a column that does not exist, usually a typo or wrong capitalization. Run `df.columns` and copy the exact name.
+- **`FileNotFoundError`** — the CSV is not where Python is looking. In Colab, remember that uploaded files disappear when the session resets.
+- **`TypeError`** — you mixed types, for example adding a number to a string. Check with `type(x)` or `df.dtypes`; a numeric column that loaded as text (`object`) is a classic cause.
+
+The error message always names the line that failed and the kind of problem. Read it bottom-up: the last line is the diagnosis. Pasting the full message into an LLM works well too — but you will get much more out of that in @sec-prompting if you can already read the message yourself.
+
+## Are you ready for the rest of this book?
+
+You are ready if you can do the following without looking anything up except syntax details:
+
+- Open a Colab notebook, run a cell, and recover when the runtime resets.
+- Store data in variables, lists, and dictionaries, and explain when you would use each.
+- Split a string into words, lowercase it, and test whether it contains a keyword.
+- Write a `for` loop with an `if` inside it, and wrap a rule in a function with `def` and `return`.
+- Load a CSV with `pd.read_csv()` and inspect it with `.head()`, `.shape`, `.info()`, and `.isnull().sum()`.
+- Filter rows with a boolean mask, including a `.str.contains(..., case=False, na=False)` condition.
+- Create a new column from an existing one.
+- Summarize with `value_counts()` and `groupby()`, and check one number by hand.
+- Make a labeled bar chart.
+
+If two or more of these feel shaky, rebuild the nine-document corpus from scratch in a blank notebook — no copy-paste — and re-derive every number in this chapter. It takes under an hour and it is the fastest fix. Everything later assumes this toolkit: @sec-huggingface feeds DataFrame columns into models, @sec-batch is essentially loops and functions over a corpus, and every evaluation you will ever run ends in a `groupby` and a plot.
+
+## In research
+
+The workflow in this chapter — corpus in a table, filter, measure, compare — is the backbone of text-as-data research in the social sciences, a field whose scale makes hand-reading impossible. [ParlSpeech V2](https://doi.org/10.7910/DVN/L4OAKN) alone contains 6.3 million parliamentary speeches from nine democracies, each row carrying speaker, party, and date — exactly the structure of our toy CSV, times seven hundred thousand. The [Manifesto Project](https://manifesto-project.wzb.eu/) provides party platforms from over 60 countries with human-coded policy positions attached. Loading either of these and running `value_counts` on the party column is, quite literally, the code you just wrote.
+
+Descriptive keyword analysis of the kind we did here is not a warm-up act; versions of it appear in published work on issue attention, agenda-setting, and campaign strategy whenever the concept of interest has a stable vocabulary. Counting mentions of "immigration" across parties and time is a legitimate measure of *attention* to immigration — it just cannot tell you position, framing, or tone. The border-security release that our title search missed is the whole methods debate in miniature: every automated measure has a gap between the words it counts and the concept you care about, and your job is to know where that gap is. [Grimmer, Roberts, and Stewart (2022)](https://press.princeton.edu/books/hardcover/9780691207544/text-as-data) organize the entire research workflow around this discipline — representation, discovery, measurement, validation — and it is worth reading alongside the technical chapters here.
+
+The same pipeline carries over unchanged to other text sources. Survey open-ends become a DataFrame with respondent ID, demographics, and a text column; interview transcripts become one row per speaker turn; news archives become one row per article with outlet and date. In each case the pandas layer is identical, and only the measurement layer changes. That is the practical reason this chapter exists: in later chapters, when an LLM labels each document for populist rhetoric or an embedding model maps speeches into a similarity space, the model's output lands right back in a DataFrame column, next to `mentions_immigration` — and gets validated, grouped, and plotted with exactly the tools you used today.
+
+<!-- DRAFT NOTE (Emre): if you want a concrete published example here (e.g., a paper using ParlSpeech or press releases from your own work), this is the paragraph to add it to — I deliberately did not invent one. -->
+
+## Further reading
+
+- [The official Python tutorial](https://docs.python.org/3/tutorial/), chapters 1–4 — the reference for everything in the first half of this chapter.
+- [pandas: Getting started](https://pandas.pydata.org/docs/getting_started/index.html) — short, task-oriented introductions from the pandas team.
+- [Matplotlib pyplot tutorial](https://matplotlib.org/stable/tutorials/pyplot.html) — enough plotting for this whole book.
+- [Harvard CS50, Lecture 0](https://cs50.harvard.edu/x/2024/weeks/0/) — if you want the deeper "how does programming actually work" foundation; excellent, but optional.
+- Grimmer and Stewart, [*Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts*](https://web.stanford.edu/~jgrimmer/tad2.pdf) (Political Analysis, 2013) — the field's founding statement on validation.
+- Grimmer, Roberts, and Stewart, [*Text as Data: A New Framework for Machine Learning and the Social Sciences*](https://press.princeton.edu/books/hardcover/9780691207544/text-as-data) (Princeton University Press, 2022) — the book-length treatment.
+- Rauh and Schwalbach, [ParlSpeech V2](https://doi.org/10.7910/DVN/L4OAKN) (Harvard Dataverse, 2020) and the [Manifesto Project](https://manifesto-project.wzb.eu/) — two real corpora to practice on once the toy one feels easy.

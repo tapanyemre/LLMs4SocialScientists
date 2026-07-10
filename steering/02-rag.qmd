@@ -1,0 +1,257 @@
+# Retrieval-Augmented Generation {#sec-rag}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Suppose you have collected 1,842 parliamentary speeches on immigration policy — every floor intervention across five years of debates. You open a chat model and ask: "Which members linked asylum policy to labour shortages in these debates?" The model answers immediately, fluently, with names, dates, and a quotation in quotation marks. Almost none of it is real. The model has never read your corpus. It is doing exactly what @sec-transformers said it would do: producing a plausible continuation of your question. A plausible-sounding member of parliament with a plausible-sounding quote is a good next-token sequence whether or not that person ever stood up to speak.
+
+Retrieval-augmented generation — RAG — is the standard fix, and the idea is almost embarrassingly simple: stop asking the model to *remember* your corpus and start *handing it the relevant pages* at question time. @sec-prompting was about what you say to the model; this chapter is about deciding what the model gets to read before it answers. You will work one retrieval by hand with numbers small enough to check on paper, build the full pipeline in code over the speech corpus, run the same question through a plain LLM and a RAG system side by side, and — because this is a research methods book, not a product demo — spend real time on where the pipeline quietly fails.
+
+## Why the model cannot answer questions about your corpus
+
+A language model's knowledge lives in its weights, and the weights were fixed the day training ended. Your corpus — scraped last month, transcribed from your own interviews, digitized from an archive — was not there. And even if some of it had been swept into the training data, the model has no lookup index over it: there is no operation called "go check the record," only "continue the text." That is why the failure mode is not a shrug but a confident fabrication. The objective rewards plausibility, and plausibility is not provenance.
+
+There is exactly one reliable channel for getting new information into a model at question time: the context window. Whatever sits in the context, attention can use — that is the mechanism you computed by hand in @sec-transformers. So why not paste all 1,842 speeches into the prompt and ask away? Three reasons. Context windows are finite; even the million-token windows of current frontier models will not hold a serious corpus, and yours may run to millions of words. Cost scales with tokens; you would pay to re-send the entire corpus with every single question. And models use long contexts unevenly: [Liu et al. (2023)](https://arxiv.org/abs/2307.03172) showed that performance on finding relevant information degrades sharply when it sits in the middle of a long context rather than at the beginning or end. More context is not automatically better context.
+
+So the real problem is *selection*: for each question, find the small slice of the corpus that matters and put only that in front of the model. Selection-by-meaning is a retrieval problem, and you already own the tool for it — embeddings, from @sec-embeddings. The name RAG comes from [Lewis et al. (2020)](https://arxiv.org/abs/2005.11401), who trained the retriever and the generator jointly as one model. Worth being honest: almost nobody runs that today. What practitioners call RAG is a plainer assembly — an off-the-shelf embedder bolted to an off-the-shelf LLM with a search step in between. Simpler than the paper, and good enough that it became the default way to ground a model in documents it has never seen.
+
+## The recipe
+
+The whole pipeline is six steps. The first three happen once, when you index the corpus; the last three happen every time you ask a question.
+
+| Step | What happens | When |
+|---|---|---|
+| 1. Chunk | Split each document into passages of a few hundred words | once |
+| 2. Embed | Convert every chunk to a vector | once |
+| 3. Store | Put the vectors in an index built for fast similarity search | once |
+| 4. Retrieve | Embed the question; find the *k* most similar chunks | per question |
+| 5. Stuff | Paste those chunks into the prompt, with their sources | per question |
+| 6. Generate | Ask the model to answer *from the chunks*, citing them | per question |
+
+Nothing in this table is new machinery. Steps 2 and 4 are the similarity logic of the embeddings chapter; step 6 is the prompting you already know. The only genuinely new decision is step 1 — and it will turn out to be the one that deserves the most methodological scrutiny.
+
+## Retrieval by hand
+
+Real systems embed chunks into several hundred dimensions. We will use two, so every number fits on the page. Here are six chunks from our (invented, but recognizable) immigration debates, with embeddings I made up; read the first dimension loosely as "enforcement" content and the second as "humanitarian" content. The usual honesty note applies: real embedding dimensions do not come labeled — they are learned and entangled — but the arithmetic below is identical in 2 dimensions and in 384.
+
+| # | Chunk (speech excerpt) | $d_1$ (enforcement) | $d_2$ (humanitarian) |
+|---|---|---|---|
+| 1 | "We must regain control of our borders and remove those with no right to remain." | 0.9 | 0.1 |
+| 2 | "The family reunion rules force refugee children to attempt dangerous journeys alone." | 0.1 | 0.9 |
+| 3 | "The backlog in asylum decisions has left thousands waiting in limbo for years." | 0.2 | 0.8 |
+| 4 | "Increased patrols in the Channel have reduced small-boat crossings this quarter." | 0.8 | 0.2 |
+| 5 | "Seasonal agricultural visas remain vital for the farming sector's labour supply." | 0.4 | 0.3 |
+| 6 | "Detaining families with children must end; community-based alternatives work." | 0.3 | 0.8 |
+
+Now the question a researcher might actually ask:
+
+> What did members say about refugee family reunification?
+
+Embed the question with the same model. Say it lands at $(0.2, 0.9)$ — low enforcement content, high humanitarian content. Retrieval is now one dot product per chunk: multiply dimension by dimension, sum, rank.
+
+| # | Dot product with query $(0.2, 0.9)$ | Rank |
+|---|---|---|
+| 1 | $0.2(0.9) + 0.9(0.1) = 0.27$ | 6 |
+| 2 | $0.2(0.1) + 0.9(0.9) = 0.83$ | **1** |
+| 3 | $0.2(0.2) + 0.9(0.8) = 0.76$ | **3** |
+| 4 | $0.2(0.8) + 0.9(0.2) = 0.34$ | 5 |
+| 5 | $0.2(0.4) + 0.9(0.3) = 0.35$ | 4 |
+| 6 | $0.2(0.3) + 0.9(0.8) = 0.78$ | **2** |
+
+Check one yourself: chunk 3 is $0.2 \times 0.2 + 0.9 \times 0.8 = 0.04 + 0.72 = 0.76$. If you can verify that cell, you understand retrieval. (In code we will first scale every vector to unit length, which makes the dot product equal to cosine similarity — same idea as the embeddings chapter, same ranking here.)
+
+With $k = 3$, we retrieve chunks 2, 6, and 3 and assemble the prompt:
+
+```
+Answer the question using ONLY the excerpts below.
+Cite every claim with the excerpt number in brackets, e.g. [2].
+If the excerpts do not contain the answer, say so plainly.
+
+Excerpts:
+[1] "The family reunion rules force refugee children to attempt
+    dangerous journeys alone." (speech 0412)
+[2] "Detaining families with children must end; community-based
+    alternatives work." (speech 1101)
+[3] "The backlog in asylum decisions has left thousands waiting
+    in limbo for years." (speech 0774)
+
+Question: What did members say about refugee family reunification?
+```
+
+That is the entire trick. The model now answers with the actual debate in front of it, and every claim can carry a bracketed pointer back to a specific speech.
+
+But look closely at what retrieval just did, because the small example contains the big caveat. Only chunk 2 is *about* family reunification. Chunk 6 ranked second because it mentions families and children; chunk 3 ranked third because it is humanitarian-adjacent. Retrieval found what *sounds similar* to the question, not what *answers* it. With three good chunks out of three, a model can write a precise answer; with one good chunk padded by two near-misses, it may pad too. Hold that thought — it is the core limitation of the whole method, and we return to it below.
+
+::: {.callout-tip}
+This table is a fifteen-minute spreadsheet exercise: six chunks, two columns, one query row, six dot products. Change the query vector and watch the ranking flip. If you want a longer guided version, Tom Yeh's [vector database by hand](https://www.byhand.ai/p/vector-database-spreadsheet) walks the same computation in a spreadsheet at slightly larger scale.
+:::
+
+<!-- DRAFT NOTE (Emre): in Lab 10 the by-hand step wasn't in the notebook — students went straight from the RAG diagram to FAISS. If the paper version landed differently in class (or if you added it later), your classroom observation belongs here. -->
+
+## The recipe in code
+
+Now the same six steps over the real corpus. Everything below runs in a free Colab notebook. Assume the speeches live in a CSV with one row per speech; the embedder comes from `sentence-transformers` ([Reimers and Gurevych 2019](https://arxiv.org/abs/1908.10084) — the paper behind the library; @sec-huggingface covers the ecosystem), and the vector store is FAISS, a similarity-search library that does our dot-product-and-rank step over millions of vectors in milliseconds.
+
+**Steps 1–3: chunk, embed, store** (run once):
+
+```{python}
+# %pip install -q sentence-transformers faiss-cpu openai anthropic pandas
+import pandas as pd
+
+speeches = pd.read_csv("immigration_speeches.csv")
+# columns: speech_id, speaker, party, date, text
+
+def chunk(text, size=200, overlap=50):
+    """Split a text into overlapping windows of `size` words."""
+    words = text.split()
+    step = size - overlap
+    return [" ".join(words[i:i + size])
+            for i in range(0, max(len(words) - overlap, 1), step)]
+
+chunks, meta = [], []
+for _, row in speeches.iterrows():
+    for j, c in enumerate(chunk(row["text"])):
+        chunks.append(c)
+        meta.append({"speech_id": row["speech_id"],
+                     "speaker": row["speaker"],
+                     "date": row["date"]})
+
+print(f"{len(speeches)} speeches -> {len(chunks)} chunks")
+```
+
+```{python}
+from sentence_transformers import SentenceTransformer
+import faiss
+
+embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+vectors = embedder.encode(chunks, show_progress_bar=True)
+
+faiss.normalize_L2(vectors)                 # unit length: dot product = cosine
+index = faiss.IndexFlatIP(vectors.shape[1])  # IP = inner product
+index.add(vectors.astype("float32"))
+print(f"Indexed {index.ntotal} chunks, {vectors.shape[1]} dimensions each")
+```
+
+A few minutes of embedding time for a corpus this size, once. Notice the design constraint hiding in plain sight: the question and the chunks must be embedded by *the same model*, or the dot products are meaningless — you would be comparing coordinates from two different maps.
+
+**Step 4: retrieve** (per question):
+
+```{python}
+def retrieve(question, k=5):
+    q = embedder.encode([question])
+    faiss.normalize_L2(q)
+    scores, ids = index.search(q.astype("float32"), k)
+    return [{"text": chunks[i], "score": float(s), **meta[i]}
+            for s, i in zip(scores[0], ids[0])]
+
+for h in retrieve("What did members say about refugee family reunification?"):
+    print(f"{h['score']:.3f}  {h['speaker']} ({h['date']}): {h['text'][:70]}...")
+```
+
+Run this line before you ever call an LLM. Reading raw retrieval output for a handful of your real research questions is the single cheapest quality check in the whole pipeline, and it needs no API key.
+
+**Steps 5–6: stuff and generate.** The generator is any chat model. Here is the pipeline with the OpenAI client pointed at OpenRouter, so the same code reaches open and commercial models (setup details in @sec-apis):
+
+```{python}
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",  # drop this line to call OpenAI directly
+    api_key="YOUR_OPENROUTER_KEY",
+)
+
+def ask_with_rag(question, k=5, model="meta-llama/llama-3.3-70b-instruct"):
+    hits = retrieve(question, k)
+    excerpts = "\n\n".join(
+        f"[{n}] {h['speaker']}, {h['date']} (speech {h['speech_id']}):\n{h['text']}"
+        for n, h in enumerate(hits, 1)
+    )
+    prompt = f"""Answer the question using ONLY the excerpts below.
+Cite every claim with the excerpt number in brackets, e.g. [2].
+If the excerpts do not contain the answer, say so plainly.
+
+Excerpts:
+{excerpts}
+
+Question: {question}"""
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return resp.choices[0].message.content, hits
+```
+
+Swapping the generator is one function away — the retrieval half does not change. With Anthropic's client:
+
+```{python}
+import anthropic
+
+claude = anthropic.Anthropic(api_key="YOUR_ANTHROPIC_KEY")
+
+def generate_claude(prompt):
+    msg = claude.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return msg.content[0].text
+```
+
+Two prompt details are doing methodological work here, not decoration. The bracketed citation instruction makes every sentence of the answer *checkable*: `[2]` points to a specific chunk, which points to a specific speech, speaker, and date. And "if the excerpts do not contain the answer, say so plainly" gives the model a licensed exit. Without it, a model handed three near-miss chunks will do what its training objective taught it to do — continue plausibly. With it, "the excerpts do not discuss this" becomes an available and frequently correct answer.
+
+::: {.callout-tip}
+FAISS keeps everything in memory and forgets it when the notebook dies — fine for a workshop, annoying for a project. When you want the index to persist between sessions, or you want to filter retrieval by metadata ("only speeches by government ministers after 2018"), move to a small vector database like [Chroma](https://www.trychroma.com/); the recipe is unchanged, the store is just less disposable. The overview at [Pinecone's vector database guide](https://www.pinecone.io/learn/vector-database/) maps the landscape.
+:::
+
+## The comparison: same corpus, same question, two answers
+
+This comparison is the centerpiece of the lab this chapter grew out of: run the *same question* through a plain LLM and through the RAG pipeline, over the same corpus, and put the answers side by side. Do it with your own corpus — the pattern you will see is stable. Illustratively, for "Which members linked asylum policy to labour shortages?":
+
+**Plain LLM.** A confident, well-organized answer naming two or three members with paraphrased positions and possibly a quoted sentence. It reads like knowledge. Check the names against your corpus and the pattern falls apart: some members never spoke in these debates, the quote appears nowhere, and there is no way to tell the remembered parts from the invented parts — the prose quality is identical for both.
+
+**RAG.** An answer built from the retrieved excerpts: "Speeches [1] and [3] connect the asylum backlog to unfilled agricultural vacancies…" — with each claim carrying a bracket you can resolve to a speech ID in seconds. And when retrieval brings back nothing on point, a good run says so: "the excerpts do not address labour shortages directly." That sentence is worth more to your research than a fluent fabrication.
+
+| | Plain LLM | RAG |
+|---|---|---|
+| Has read your corpus | no | the retrieved slice, per question |
+| Sources | none checkable | chunk-level citations |
+| Characteristic failure | confident fabrication | miss: right passage not retrieved |
+| "I don't know" | rare | available when prompted for it |
+| Cost per question | one short prompt | embedding + a longer prompt |
+
+The comparison also tells you what RAG is *for*. It does not make the model smarter, and it does not make the model truthful. It changes the failure mode from one you cannot detect (fluent invention) to ones you can audit (a wrong retrieval, a mis-citation). For research purposes, that trade is nearly always worth it.
+
+There is a third contender the lab compared — retrieval over *relationships* rather than passages, for questions like "how did the framing of asylum travel between parties over time?" where the answer lives in connections between documents, not inside any one of them. That is GraphRAG, and it gets a chapter of its own (@sec-graphrag). And one demystifying note: every "chat with your PDFs" product you have seen — NotebookLM and its cousins, covered in @sec-research-tools — is this same six-step recipe behind a nicer interface. You now know what is inside the box, including where it breaks.
+
+## What can go wrong
+
+**Retrieval quality bounds answer quality.** The generator can only cite what the retriever hands it. If the one speech that actually answers your question is not in the top *k*, no model, at any price, can recover it — the best case is an honest "not in the excerpts," the worst case is an improvised answer built on near-misses. So evaluate retrieval *separately* from generation, the way you would validate any measurement instrument: take a sample of real research questions, hand-identify the passages that should come back, and check how often they appear in the top *k* (in retrieval jargon, recall@k). This is the same discipline [Grimmer and Stewart (2013)](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20) drilled into text-as-data work: validate, validate, validate — a pipeline that produces fluent answers has not thereby been validated.
+
+**Retrieval is similarity, not relevance.** You saw it in the by-hand table: the detention chunk outranked everything except the true match because it *sounds* adjacent. The failure gets sharper when your question has structure that general-purpose embeddings ignore. Ask for "speeches opposing the bill" and you will retrieve speeches *about* the bill regardless of stance, because topic dominates the geometry of an off-the-shelf embedder. Retrieval finds the neighborhood; it does not read for argument. If your question is really a stance or frame question, RAG alone is the wrong instrument — that is a classification task, and it needs the validation machinery of @sec-batch.
+
+**Chunking is a researcher degree of freedom.** Chunk size, overlap, and unit (speech? paragraph? sentence?) all change what *can* be retrieved: split a speech mid-argument and neither half may resemble a question the full passage would have matched; make chunks too long and one topic's signal drowns another's. There is no neutral setting, only settings with different consequences — exactly the situation [Denny and Spirling (2018)](https://www.cambridge.org/core/journals/political-analysis/article/abs/text-preprocessing-for-unsupervised-learning-why-it-matters-when-it-misleads-and-what-to-do-about-it/AA7D4DE0AA6AB208502515AE3EC6989E) documented for preprocessing in unsupervised text models, where innocuous-looking choices flipped substantive conclusions. Treat chunking the same way: report your parameters, and rerun a few key questions at a different chunk size to see whether your reading survives. If it does not, that is a finding about your pipeline, not about parliament.
+
+::: {.callout-warning}
+RAG reduces hallucination; it does not eliminate it. A model with correct excerpts in context can still blend them with its parametric priors — attributing excerpt 2's claim to excerpt 3's speaker, or "improving" a quotation into words nobody said, complete with a confident bracket. The citations make the output *checkable*, not *correct*. Before any RAG-assisted claim or quotation enters a paper, resolve the bracket and read the source passage. Treat the answer as a reading, not a proof — the proof is the document it points to.
+:::
+
+## In research
+
+The most immediate payoff is corpus interrogation at a scale close reading cannot reach and keyword search cannot serve. A researcher with parliamentary records, a decade of news coverage, or a shelf of party manifestos can now ask substantive questions — "how did members justify the 2019 rule change?", "which frames recur when coverage turns to deportation?" — and get answers with pointers into specific documents, in minutes rather than weeks. Used honestly, this reorganizes the *exploration* phase of a project: RAG becomes a research assistant that has skimmed everything and always shows its sources, surfacing the twelve speeches you must now actually read. It complements close reading by directing it; it substitutes for close reading only in projects that were going to be shallow anyway.
+
+For interview and survey researchers the quiet advantage is auditability — plus a practical one about privacy. The retrieval half of the pipeline runs entirely on your machine: sentence-transformers and FAISS never send a token anywhere, and pairing them with a local open model (see @sec-huggingface) gives you a fully offline RAG system for transcripts that an ethics protocol says cannot leave your laptop. And because every generated claim carries a bracket, "participants linked housing insecurity to distrust of local officials" stops being a vibe from memos and becomes a claim with resolvable line-level evidence — closer to the traceability qualitative methodologists have always demanded of coding, not further from it.
+
+Finally, the retrieval step is a general-purpose component you will reuse beyond question-answering. Classification prompts improve when you retrieve the relevant codebook entry and a few similar already-coded examples into the context — retrieval as *context-provision* for measurement rather than for conversation. Literature-review tools, systematic-review screening assistants, and the research workflows in @sec-research-tools are all this same pattern. Across all of it, the methodological argument is the one this chapter has been making throughout: the difference between "the model says X" and "the model points to speech 0412, which says X" is the difference between an anecdote and an auditable procedure. Only the second belongs in a methods section.
+
+<!-- DRAFT NOTE (Emre): a concrete story from your own work would anchor this section — e.g., a question where RAG over a speech corpus surfaced something keyword search missed, or where a retrieval audit caught a miss that would have skewed a reading. Also your opinion on when students should build vs. use NotebookLM-type tools. -->
+
+## Further reading
+
+- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) — Lewis et al. (2020), the paper that named the method. The jointly trained original is heavier machinery than the pipeline you built, but the motivation section is exactly our problem.
+- [Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172) — Liu et al. (2023). The evidence that stuffing more into context is not a substitute for retrieving well.
+- [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084) — Reimers and Gurevych (2019). The paper behind `sentence-transformers`; read it to understand what your embedder was trained to consider "similar."
+- [What is a Vector Database?](https://www.pinecone.io/learn/vector-database/) and [What is FAISS?](https://www.pinecone.io/learn/faiss/) — Pinecone's practitioner guides; the pre-lab readings I assign, still the fastest orientation to the storage layer.
+- [Vector Database by Hand](https://www.byhand.ai/p/vector-database-spreadsheet) — Tom Yeh's spreadsheet exercise; the longer guided version of this chapter's by-hand section.
+- [Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20) — Grimmer and Stewart (2013), *Political Analysis*. The validation discipline this chapter asks you to apply to retrieval.
+- [Text Preprocessing for Unsupervised Learning](https://www.cambridge.org/core/journals/political-analysis/article/abs/text-preprocessing-for-unsupervised-learning-why-it-matters-when-it-misleads-and-what-to-do-about-it/AA7D4DE0AA6AB208502515AE3EC6989E) — Denny and Spirling (2018), *Political Analysis*. Read "preprocessing" as "chunking" and every warning transfers.

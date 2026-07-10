@@ -1,0 +1,47 @@
+# ============================================================
+# FULL PROFILE = the complete manuscript, drafts included.
+# This file only overrides the chapter list; everything else
+# (theme, comments, formats) comes from _quarto.yml.
+#
+#   quarto preview --profile full    → browse the whole draft
+#   quarto render  --profile full    → build it (stays local;
+#                                      CI renders the default
+#                                      profile, so drafts never
+#                                      deploy by accident)
+# ============================================================
+
+book:
+  chapters:
+    - index.qmd
+    - roadmap.qmd
+    - book-map.qmd
+    - part: "Python Refresher"
+      chapters:
+        - python-refresher/01-python-for-text-analysis.qmd
+    - part: "Foundations"
+      chapters:
+        - foundations/01-neural-networks.qmd
+        - foundations/02-embeddings.qmd
+        - foundations/03-transformers-and-attention.qmd
+    - part: "LLMs in Action"
+      chapters:
+        - llms-in-action/01-huggingface.qmd
+        - llms-in-action/02-working-with-apis.qmd
+        - llms-in-action/03-batch-processing.qmd
+    - part: "Steering LLMs"
+      chapters:
+        - steering/01-prompting.qmd
+        - steering/02-rag.qmd
+        - steering/03-graphrag.qmd
+        - steering/04-research-tools.qmd
+    - part: "Reading LLMs: Mechanistic Interpretability"
+      chapters:
+        - interpretability/01-why-interpretability.qmd
+        - interpretability/02-logit-lens.qmd
+        - interpretability/03-sparse-autoencoders.qmd
+        - interpretability/04-activation-patching.qmd
+        - interpretability/05-circuits.qmd
+    - part: "Changing LLMs: Model Development"
+      chapters:
+        - model-development/01-fine-tuning.qmd
+    - references.qmd

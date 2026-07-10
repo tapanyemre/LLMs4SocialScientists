@@ -1,0 +1,183 @@
+# Neural Networks by Hand {#sec-neural-networks}
+
+::: {.callout-note appearance="simple" icon="false"}
+**🚧 Status: `drafted`** — a machine-assisted draft built from my teaching materials, awaiting my full revision. Read it as a working paper, not a finished chapter — and tell me what breaks in the comments below.
+:::
+
+Every language model you will use in this book — the classifier that codes your parliamentary speeches, the chat model that summarizes your interviews — is built from one small object repeated billions of times: a neuron that takes some numbers in, weighs them, and produces a number out. If you understand that object, the rest of the book is arrangement, not magic. If you do not, every later chapter rests on a black box, and you will be back to citing vibes in your methods section.
+
+The good news: you already know this object. Social scientists have been fitting weighted-sum models for a century. A perceptron — the original artificial neuron — is a regression that makes a decision. So in this chapter we build one on paper, for a problem you care about: predicting whether someone turns out to vote. We do a full forward pass with small integer weights, teach the neuron to learn from its mistakes with nothing but addition and subtraction, find the wall a single neuron cannot get over, and climb it with a second layer. There is no code in this chapter. That is deliberate: the numbers are small enough to trust, and once you have moved them by hand you will never again read "the model learned" as an incantation. Code starts in @sec-embeddings and becomes the whole point by @sec-huggingface.
+
+<!-- DRAFT NOTE (Emre): I transposed your "Should we go to the beach?" example from Lab 6 to "Will this person vote?" — same structure, same arithmetic, but it lets the weights read as a turnout theory and sets up the Riker & Ordeshook nod. If you'd rather keep the beach (it's charming and lower-stakes for a first contact with the math), everything swaps back cleanly: sunny/warm/low-humidity for contacted/partisan/close-race. -->
+
+## A neuron is a weighted vote
+
+Here is the whole mechanism. A neuron has:
+
+- **Inputs**: numbers describing a case. Ours will be yes/no facts coded 1/0.
+- **Weights**: one number per input, saying how much that input matters.
+- **A threshold**: the bar the weighted sum must clear for the neuron to "fire."
+
+The neuron multiplies each input by its weight, adds the products up, and compares the total to the threshold. Over the bar: output 1. Under: output 0. That comparison is called the **activation function** — here, a step function. That is everything a neuron does.
+
+Now the running example. You want to predict whether a person votes, from three facts:
+
+| Input | Meaning | Weight |
+|---|---|---:|
+| $x_1$ | Contacted by a campaign this cycle | 2 |
+| $x_2$ | Strong party identifier | 3 |
+| $x_3$ | Race in their district is competitive | 1 |
+
+Decision rule: **predict "votes" if the weighted sum is at least 4.**
+
+Read the weights as a theory before you compute anything. This neuron believes party attachment matters more than a knock on the door, and both matter more than how close the race is. The threshold encodes a baseline reluctance: no single factor is enough on its own. Whether that theory is *right* is an empirical question — political scientists have argued about exactly these terms since [Riker and Ordeshook (1968)](https://www.cambridge.org/core/journals/american-political-science-review/article/abs/theory-of-the-calculus-of-voting/500608E51991E92AC96EB6860F1192CA) wrote turnout as a weighted sum of costs, benefits, and duty. For now the weights are ours, chosen by hand. Soon the machine will choose them.
+
+## The forward pass, by hand
+
+Running inputs through the network to get an output is called the **forward pass**. Do it for five voters. Multiply, add, compare — nothing else.
+
+| Voter | Contacted ($\times 2$) | Strong partisan ($\times 3$) | Close race ($\times 1$) | Weighted sum | $\geq 4$? | Prediction |
+|---|:-:|:-:|:-:|---|:-:|---|
+| A | 1 | 1 | 1 | $2+3+1 = 6$ | yes | votes |
+| B | 0 | 1 | 1 | $0+3+1 = 4$ | yes | votes |
+| C | 1 | 0 | 1 | $2+0+1 = 3$ | no | stays home |
+| D | 0 | 0 | 1 | $0+0+1 = 1$ | no | stays home |
+| E | 1 | 1 | 0 | $2+3+0 = 5$ | yes | votes |
+
+Check voter C against your intuition: contacted, competitive race, but no party attachment — and the neuron says stays home, because $2 + 1 = 3$ falls short of 4. Voter B sits exactly on the threshold at 4; we count ties as firing. That tie-breaking rule is arbitrary, and the arbitrariness is a hint that the hard step is a crude tool. More on that in a moment.
+
+Two pieces of vocabulary before we move on, because you will meet them in every paper:
+
+- **Bias.** Most texts fold the threshold into the sum as a *bias* term: instead of "sum $\geq 4$," write "sum $- 4 \geq 0$." Same arithmetic, different bookkeeping. When a model card says a layer has "weights and biases," the bias is our threshold wearing a different sign.
+- **Sigmoid.** Replace the hard step with a soft one that turns the net score into a number between 0 and 1: a score of exactly 0 (voter B) becomes 0.5, voter A's net score of $+2$ becomes about 0.88, voter D's $-3$ becomes about 0.05. Now the output reads as a propensity instead of a verdict. If that sounds familiar, it should: **a single neuron with a sigmoid activation is a logistic regression.** If you have ever run a logit model of turnout, you have already fit a one-neuron neural network. The difference is not the object; it is how the weights get found, and how many of these objects get stacked.
+
+## Learning from error
+
+We picked the weights by hand, from theory. A neural network does something different: it starts with arbitrary weights and adjusts them, one mistake at a time, using labeled examples. This is the **perceptron learning rule**, and it needs no calculus — only a rule you could explain to a child:
+
+> If the neuron fired when it shouldn't have, lower the weight on every input that was active, and raise the threshold. If it stayed silent when it should have fired, raise the weights on active inputs, and lower the threshold. If it was right, touch nothing.
+
+Note what the rule does *not* do: it never touches the weight on an input that was 0. Only the wires that carried the mistake get adjusted.
+
+Let's train from scratch. Start every weight at 1 and the threshold at 2 — deliberately wrong. Our labeled data: voter E (contacted, partisan, safe seat) truly **voted**; voter C (contacted, not partisan, close race) truly **stayed home**. Cycle through them:
+
+| Round | Case | Inputs | Weights before | Threshold | Sum | Predicted | Actual | Update |
+|:-:|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| 1 | E | (1,1,0) | (1,1,1) | 2 | 2 | votes | votes | none — correct |
+| 2 | C | (1,0,1) | (1,1,1) | 2 | 2 | votes | stays home | fired wrongly: $w_1 \to 0$, $w_3 \to 0$; threshold $\to 3$ |
+| 3 | E | (1,1,0) | (0,1,0) | 3 | 1 | stays home | votes | missed: $w_1 \to 1$, $w_2 \to 2$; threshold $\to 2$ |
+| 4 | C | (1,0,1) | (1,2,0) | 2 | 1 | stays home | stays home | none — correct |
+| 5 | E | (1,1,0) | (1,2,0) | 2 | 3 | votes | votes | none — correct |
+
+Watch round 3 carefully. Fixing the mistake on voter C *broke* the previously correct prediction for voter E. That is not a bug; that is what learning looks like. The network does not solve cases one at a time — it wobbles between them until it finds weights that satisfy everyone. Here it settles on $(1, 2, 0)$ with threshold 2, which classifies both training cases correctly.
+
+Now read the learned weights as you read the hand-picked ones. The machine concluded that partisanship alone clears the bar ($2 \geq 2$), contact alone does not, and a close race counts for nothing at all. Is that the true model of turnout? No — it is *a* rule consistent with two examples, and with two examples many rules are consistent. The learned weights are a reading of the data, not a proof about the world. More data pins the weights down; biased data pins them down in the wrong place. Hold that thought — it returns with force when the training data is two trillion words of internet text.
+
+One honest caveat about this rule: [Rosenblatt (1958)](https://doi.org/10.1037/h0042519) introduced the perceptron, and within a few years the *perceptron convergence theorem* was proved: this cycle always settles *when a correct set of weights exists*. When none exists, it wobbles forever. Which raises the obvious question: when does no correct set of weights exist?
+
+## The limit of one neuron
+
+Here is a pattern a single neuron cannot learn, no matter how long it trains. Suppose voters can be contacted by two rival campaigns: $x_1 = $ contacted by party A, $x_2 = $ contacted by party B. And suppose the data shows this: one contact mobilizes, but *conflicting* contacts cross-pressure people into staying home, and no contact leaves them home too.
+
+<!-- DRAFT NOTE (Emre): "cross-pressure" is doing the framing work here — if you want, add the Lazarsfeld/Berelson Columbia-school citation you prefer; I didn't want to cite from memory. -->
+
+| Contacted by A | Contacted by B | Votes? |
+|:-:|:-:|:-:|
+| 0 | 0 | 0 |
+| 1 | 0 | 1 |
+| 0 | 1 | 1 |
+| 1 | 1 | 0 |
+
+(If you have seen logic gates, this is XOR — output 1 exactly when the inputs differ.)
+
+Try to find weights $w_1, w_2$ and threshold $t$ that produce this table. You need four things at once:
+
+1. Row 1: $0 < t$ — the threshold is positive.
+2. Row 2: $w_1 \geq t$.
+3. Row 3: $w_2 \geq t$.
+4. Row 4: $w_1 + w_2 < t$.
+
+Add lines 2 and 3: $w_1 + w_2 \geq 2t$. Since $t$ is positive (line 1), $2t > t$, so $w_1 + w_2 > t$. That directly contradicts line 4. No weights exist. Not "hard to find" — *cannot exist*, by three lines of arithmetic. A single neuron draws one straight line through the data and calls one side "fires"; this pattern has no such line. In your statistical vocabulary: a lone weighted sum is a regression with no interaction terms, and this outcome *is* an interaction.
+
+The fix is not a cleverer neuron. It is more of them, arranged in **layers**. Give two hidden neurons the job of detecting intermediate concepts, then let an output neuron combine *their* verdicts:
+
+- $h_1$ fires if $x_1 + x_2 \geq 1$ — "contacted at all"
+- $h_2$ fires if $x_1 + x_2 \geq 2$ — "contacted by both"
+- Output fires if $h_1 - 2 h_2 \geq 1$ — "contacted, but not cross-pressured"
+
+| $x_1$ | $x_2$ | $h_1$ (any contact) | $h_2$ (both) | $h_1 - 2h_2$ | $\geq 1$? | Votes? |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 0 | 0 | 0 | 0 | 0 | no | 0 |
+| 1 | 0 | 1 | 0 | 1 | yes | 1 |
+| 0 | 1 | 1 | 0 | 1 | yes | 1 |
+| 1 | 1 | 1 | 1 | $-1$ | no | 0 |
+
+Every row correct. Notice what happened conceptually: the hidden layer *manufactured features that were not in the data*. Nobody gave the network a "cross-pressured" column; it built one out of raw inputs, then reasoned with it. This is the single most important idea in the chapter. Deep networks are deep because each layer builds slightly more abstract concepts out of the previous layer's concepts — and much later, when the interpretability chapters (starting with @sec-why-interpretability) ask *what concepts did this language model manufacture, and where does it keep them?*, they are asking about exactly these hidden units, scaled up.
+
+## Backpropagation, still by hand
+
+One problem remains, and it is the big one. The perceptron rule above only knows how to adjust weights connected directly to the output. In our two-layer network, how should a mistake at the output change the *hidden* weights, two steps upstream? The answer — **backpropagation** — is the algorithm that trains every modern model, and its logic survives translation into plain arithmetic: *pass the blame backwards, in proportion to responsibility.*
+
+Strip the problem to its skeleton: a chain of two weights, with plain multiplication and no step function (real networks add the squashing back; the logic is identical).
+
+$$x \;\xrightarrow{\;\times w_1\;}\; h \;\xrightarrow{\;\times w_2\;}\; \text{output}$$
+
+Set $x = 1$, $w_1 = 2$, $w_2 = 3$. Forward pass: $h = 1 \times 2 = 2$, output $= 2 \times 3 = 6$. Suppose the target was 3. We are too high by 3. Which weight is to blame, and by how much?
+
+Answer by asking a sensitivity question about each weight — *if I raised this weight by 1, how much would the output move?*
+
+- **$w_2$**: the output is $h \times w_2$ and $h = 2$, so raising $w_2$ by 1 raises the output by **2**.
+- **$w_1$**: raising $w_1$ by 1 raises $h$ by $x = 1$, and each unit of $h$ is worth $w_2 = 3$ at the output. So raising $w_1$ by 1 raises the output by **3**.
+
+Notice how we got the second number: we multiplied effects along the chain ($1 \times 3$), passing responsibility backwards through the very weights the signal flowed forward through. That backwards bookkeeping *is* backpropagation. In the papers, each sensitivity is called a **gradient**. You just computed two of them with grade-school multiplication.
+
+Now update: move each weight *against* the error, in proportion to its sensitivity, scaled by a small step size — the **learning rate**. Take 0.05:
+
+- $w_2 \to 3 - 0.05 \times 3 \times 2 = 3 - 0.3 = 2.7$
+- $w_1 \to 2 - 0.05 \times 3 \times 3 = 2 - 0.45 = 1.55$
+
+Run the forward pass again: $h = 1.55$, output $= 1.55 \times 2.7 = 4.19$. The error shrank from $3.0$ to about $1.2$. Repeat the loop — forward pass, measure error, pass blame back, nudge weights — and the output walks toward the target. That loop, iterated a few million times, is "training." Nothing else is happening inside the machine.
+
+::: {.callout-warning}
+**Why the steps must be small.** Each sensitivity was computed *as if the other weight stayed put* — but we then moved both at once, so the effects compound. Small steps keep that approximation honest; big steps break it. Redo the update with a learning rate of 0.3: $w_2 \to 1.2$, $w_1 \to -0.7$, output $= -0.84$. We started 3 too high and are now nearly 4 too *low* — worse than before we "learned." A learning rate too large makes training oscillate or blow up entirely; too small and training crawls. When a paper reports fussing over learning-rate schedules, this arithmetic is the reason.
+:::
+
+::: {.callout-tip}
+**The vocabulary, decoded.** You can now parse a sentence like "we fine-tuned for 3 epochs with learning rate 2e-5" word by word: the **loss** is the measured error (our "too high by 3"); a **gradient** is a sensitivity computed by blame-passing; **gradient descent** is the nudge-all-weights-downhill step; an **epoch** is one pass through the training data (our training set had two cases, so rounds 1–5 were two and a half epochs); the **learning rate** is the step size that just burned us at 0.3. Nothing in that sentence is beyond the arithmetic you did on this page.
+:::
+
+The idea of training multi-layer networks this way was crystallized by [Rumelhart, Hinton, and Williams (1986)](https://www.nature.com/articles/323533a0) in a four-page *Nature* paper, and the algorithm inside every LLM training run today is a direct descendant.
+
+<!-- DRAFT NOTE (Emre): In the Lab 6 wrap-up you asked students what surprised them most about the math. If there's a recurring answer from AIDE (my guess: "that's *it*?"), it belongs right here as a one-line classroom story. -->
+
+## From four parameters to 175 billion
+
+Count what we built. The turnout neuron: 3 weights plus a threshold — **4 parameters**. The cross-pressure network: three neurons of 2 weights and a threshold each — **9 parameters**. When a model release says "7 billion parameters," it is counting exactly these things: individual weights and biases, each one a number that gradient descent nudged, exactly the way you nudged $w_1$.
+
+| Model | Parameters | What they are |
+|---|---:|---|
+| Turnout neuron | 4 | 3 weights + 1 threshold |
+| Cross-pressure network | 9 | 3 neurons × (2 weights + 1 threshold) |
+| Small open models you'll run in @sec-huggingface | millions to billions | same objects, more of them |
+| GPT-3 ([Brown et al. 2020](https://arxiv.org/abs/2005.14165)) | 175 billion | same objects, more of them |
+
+The claim I want you to leave with is stronger than "big models are like small ones." It is this: **there is no new mathematical ingredient between this page and GPT-3.** Weighted sums, a squashing function, and blame passed backwards — that is the complete parts list. What the coming chapters add is *arrangement*: @sec-embeddings shows what the input numbers are when the input is a word rather than a survey response; @sec-transformers shows a particular wiring of weighted sums — attention — that lets words weigh each other; and training an LLM is the loop you just ran, with "predict the next word" as the target and a few trillion words as the training set. Scale changes what these systems can do, in ways nobody fully predicted and nobody fully understands. It does not change what they are.
+
+## In research
+
+The most immediate payoff is translational. When you read that a stance-detection model for parliamentary speeches was "fine-tuned for 3 epochs with a linear learning-rate schedule," or when @sec-fine-tuning has you run those words yourself, every term now refers to arithmetic you have performed. This matters for the methods section you will eventually write: a growing number of social science papers classify political texts, code open-ended survey responses, or annotate news at scale with neural classifiers, and reviewers increasingly expect authors to understand — not just cite — the machinery. A researcher who has moved the weights by hand can answer the reviewer who asks "what exactly did the model learn?" with something better than a shrug.
+
+The learning rule itself carries a methodological warning worth internalizing. Gradient descent moves weights to reduce error *on the labels you provided* — nothing else. It has no access to the concept you meant, only to the examples you coded. Our two-example perceptron "learned" that competitive races are irrelevant to turnout, a perfectly rational inference from its impoverished data. Scale this up: if your training labels for "uncivil tweet" carry your annotators' systematic disagreements, the weights will faithfully encode the disagreement; if your labeled manifestos over-represent one party family, the manufactured features will too. Every data-quality instinct you have from survey research — sampling, measurement validity, coder reliability — applies with full force, because the weights are nothing but a compression of the labeled data.
+
+Finally, this chapter is the foundation for the book's third act. Because a network is weighted sums all the way down, it is in principle *inspectable*: the hidden units that manufactured "cross-pressured" in our toy have counterparts in language models that manufacture features for sentiment, syntax, and — plausibly — things like ideology and framing. Whether we can find those features, name them, and validate the naming is the entire agenda of the interpretability chapters (beginning in @sec-why-interpretability), and it is where social-scientific instincts about coding and construct validity turn out to be surprisingly load-bearing. You cannot open the black box before knowing what the box is made of. Now you know: it is made of voter C's row in a table — multiplied by 175 billion.
+
+<!-- DRAFT NOTE (Emre): a concrete example from your own work would land well here — e.g., the narratives project, or a BLISS participant's classifier story. -->
+
+## Further reading
+
+- [3Blue1Brown, *Neural Networks*](https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi) — the best visual treatment of everything in this chapter; watch the first two videos after reading, not instead of reading.
+- [Rosenblatt (1958), "The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain"](https://doi.org/10.1037/h0042519), *Psychological Review* 65(6): 386–408 — the original paper; note that it appeared in a psychology journal.
+- [Rumelhart, Hinton & Williams (1986), "Learning representations by back-propagating errors"](https://www.nature.com/articles/323533a0), *Nature* — four pages that trained everything since.
+- [Brown et al. (2020), "Language Models are Few-Shot Learners"](https://arxiv.org/abs/2005.14165) — the GPT-3 paper; skim the introduction now, return after the transformers chapter.
+- [W3Schools, Perceptrons](https://www.w3schools.com/ai/ai_perceptrons.asp) — more worked perceptron examples if you want extra practice.
+- [Math is Fun, Multiplying Matrices](https://www.mathsisfun.com/algebra/matrix-multiplying.html) — a gentle refresher; the forward pass for a whole layer is one matrix multiplication, which is why GPUs matter.

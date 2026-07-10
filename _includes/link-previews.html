@@ -1,0 +1,81 @@
+<script>
+// Obsidian-style page previews for internal chapter links.
+// Quarto's built-in crossref popup only fires when the target link has a
+// #fragment; links to a whole chapter page (href="../part/chapter.html")
+// never get one. This layer covers exactly that case: hover an internal
+// page link -> fetch the chapter -> show its title + opening paragraphs.
+(function () {
+  if (typeof window === "undefined") return;
+  window.addEventListener("DOMContentLoaded", function () {
+    if (typeof window.tippy !== "function") return;
+
+    var cache = new Map();
+
+    function pagePreview(url) {
+      if (cache.has(url)) return cache.get(url);
+      var p = fetch(url)
+        .then(function (res) { return res.ok ? res.text() : null; })
+        .then(function (html) {
+          if (!html) return null;
+          var doc = new DOMParser().parseFromString(html, "text/html");
+          var main = doc.querySelector("main") || doc.body;
+          var title =
+            (doc.querySelector("main .quarto-title h1, main h1") || {}).textContent || "";
+          var out = document.createElement("div");
+          var count = 0, budget = 420;
+          var blocks = main.querySelectorAll("p, ul, ol");
+          for (var i = 0; i < blocks.length && count < 3 && budget > 0; i++) {
+            var el = blocks[i];
+            if (el.closest(".callout, .quarto-title, nav, header, footer, #quarto-appendix")) continue;
+            var text = (el.innerText || "").trim();
+            if (!text) continue;
+            var pEl = document.createElement("p");
+            pEl.textContent = text.length > budget ? text.slice(0, budget).replace(/\s+\S*$/, "") + " …" : text;
+            budget -= text.length;
+            out.appendChild(pEl);
+            count++;
+          }
+          if (!out.children.length) return null;
+          return (
+            '<div class="link-preview">' +
+            (title ? '<div class="link-preview-title">' + title.replace(/</g, "&lt;") + "</div>" : "") +
+            out.innerHTML +
+            '<div class="link-preview-hint">click to open</div></div>'
+          );
+        })
+        .catch(function () { return null; });
+      cache.set(url, p);
+      return p;
+    }
+
+    var anchors = document.querySelectorAll("main a[href]");
+    anchors.forEach(function (a) {
+      var href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || a.target === "_blank") return;
+      var url;
+      try { url = new URL(href, window.location.href); } catch (e) { return; }
+      if (url.origin !== window.location.origin) return;
+      if (!/\.html$/.test(url.pathname)) return;
+      if (url.hash) return; // fragment links: Quarto's own popup handles these
+      if (url.pathname === window.location.pathname) return;
+
+      window.tippy(a, {
+        allowHTML: true,
+        maxWidth: 430,
+        theme: "link-preview",
+        delay: [250, 80],
+        interactive: false,
+        appendTo: function () { return document.body; },
+        onShow: function (instance) {
+          pagePreview(url.href).then(function (html) {
+            if (html) instance.setContent(html);
+            else instance.hide();
+          });
+          return true;
+        },
+        content: '<div class="link-preview link-preview-loading">…</div>',
+      });
+    });
+  });
+})();
+</script>
