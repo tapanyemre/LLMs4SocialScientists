@@ -34,9 +34,9 @@ book:
   comments:
     giscus:
       repo: tapanyemre/LLMs4SocialScientists
-      repo-id: "1029154030"
+      repo-id: "R_kgDOPVek7g"
       category: General
-      category-id: DIC_kwDOLhXqXQc4CbqE
+      category-id: DIC_kwDOPVek7s4CtmDr
       mapping: pathname
       reactions-enabled: true
       input-position: bottom
